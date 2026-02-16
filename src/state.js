@@ -1,4 +1,4 @@
-export const GRID_SIZE = 5;
+export const GRID_SIZE = 3;
 export const DEFAULT_COLOR = '#5ca7ff';
 
 export function createInitialState() {

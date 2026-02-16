@@ -59,7 +59,7 @@ export function exportStandaloneSvg(state) {
       const style = config.animationStyle;
       const speed = Number(config.speed) || 1;
       const direction = config.direction;
-      const gridSize = Number(config.gridSize) || 5;
+      const gridSize = Number(config.gridSize) || 3;
       const fill = config.fill || '${DEFAULT_CELL_FILL}';
 
       for (const cell of cells) {

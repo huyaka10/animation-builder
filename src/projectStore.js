@@ -1,4 +1,4 @@
-import { createZeroDelayMatrix, DEFAULT_COLOR, fromBooleanGrid, sanitizeDelayMatrix, toBooleanGrid } from './state.js';
+import { createZeroDelayMatrix, DEFAULT_COLOR, fromBooleanGrid, GRID_SIZE, sanitizeDelayMatrix, toBooleanGrid } from './state.js';
 
 export const PROJECT_STORAGE_KEY = 'animationBuilderProject';
 const MODES = new Set(['spinner', 'blink', 'linear', 'directional']);
@@ -79,7 +79,7 @@ function normalizePattern(pattern) {
     return null;
   }
 
-  if (pattern.gridSize !== 5) {
+  if (pattern.gridSize !== GRID_SIZE) {
     return null;
   }
 
