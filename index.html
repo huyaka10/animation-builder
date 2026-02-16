@@ -3,45 +3,33 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SVG Animation Builder – Stage 6</title>
+    <title>SVG Animation Builder – Timeline Edition</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div id="app" class="app-shell">
       <main class="stage-wrap">
-        <h1>Animation Builder · Stage 6</h1>
+        <h1>Animation Builder · Timeline</h1>
         <section class="stage-card">
           <svg id="stage" viewBox="0 0 520 520" aria-label="3 by 3 animation grid"></svg>
+        </section>
+
+        <section class="timeline-panel">
+          <div class="timeline-actions">
+            <button id="addFrameBtn" class="btn" type="button">Add Frame</button>
+            <button id="duplicateFrameBtn" class="btn" type="button">Duplicate Frame</button>
+            <button id="deleteFrameBtn" class="btn btn-danger" type="button">Delete Frame</button>
+          </div>
+          <ul id="timelineList" class="timeline-list" aria-label="Animation frames"></ul>
         </section>
       </main>
 
       <aside class="panel">
         <h2>Settings</h2>
 
-        <label class="field">
-          <span>Pattern</span>
-          <select id="patternSelect">
-            <option value="spinner">Spinner</option>
-            <option value="blink">Blink</option>
-            <option value="linear">Linear</option>
-            <option value="directional">Directional</option>
-          </select>
-        </label>
-
-        <div id="directionGroup" class="field" hidden>
-          <span>Direction</span>
-          <div class="direction-grid">
-            <button type="button" class="direction-btn" data-direction="right">→</button>
-            <button type="button" class="direction-btn" data-direction="left">←</button>
-            <button type="button" class="direction-btn" data-direction="up">↑</button>
-            <button type="button" class="direction-btn" data-direction="down">↓</button>
-          </div>
+        <div class="field">
+          <span id="frameInfo">Frame 1 / 1</span>
         </div>
-
-        <label class="field">
-          <span>Color</span>
-          <input id="colorInput" type="color" value="#5ca7ff" />
-        </label>
 
         <label class="field">
           <span>Speed (FPS): <strong id="fpsValue">12</strong></span>
@@ -56,40 +44,16 @@
           </select>
         </label>
 
-        <section class="selected-cell" id="selectedCellBlock">
-          <h3>Selected Cell</h3>
-          <div id="selectedCellCoords" class="muted">No cell selected</div>
-          <label class="field">
-            <span>Delay (ms)</span>
-            <input id="selectedDelayInput" type="number" min="0" step="10" disabled value="0" />
-          </label>
-        </section>
-
         <label class="field">
-          <span>Auto Distribute Delay Step (ms)</span>
-          <div class="inline-row">
-            <input id="delayStepInput" type="number" min="0" step="10" value="120" />
-            <button id="autoDelayBtn" class="btn" type="button">Distribute</button>
-          </div>
+          <span>Color</span>
+          <input id="colorInput" type="color" value="#5ca7ff" />
         </label>
 
         <button id="previewToggle" class="btn">Pause Preview</button>
-        <button id="captureBtn" class="btn">Capture Pattern</button>
-        <button id="savePatternBtn" class="btn">Save Changes</button>
-        <button id="duplicateBtn" class="btn">Duplicate</button>
-        <button id="deletePatternBtn" class="btn btn-danger">Delete</button>
-        <button id="exportBtn" class="btn btn-primary">Export JSON</button>
+        <button id="exportJsonBtn" class="btn btn-primary">Export JSON</button>
+        <button id="importJsonBtn" class="btn" type="button">Import JSON</button>
+        <input id="importJsonInput" type="file" accept="application/json" hidden />
         <button id="exportSvgBtn" class="btn">Export SVG</button>
-
-        <section class="patterns-wrap">
-          <h3>Patterns</h3>
-          <ul id="patternList" class="pattern-list" aria-label="Saved patterns"></ul>
-          <div class="project-actions">
-            <button id="exportProjectBtn" class="btn">Export Project</button>
-            <button id="importProjectBtn" class="btn">Import Project</button>
-            <input id="importProjectInput" type="file" accept="application/json" hidden />
-          </div>
-        </section>
 
         <pre id="exportOutput" class="output" aria-live="polite"></pre>
       </aside>
