@@ -4,8 +4,7 @@ const CELL_SIZE = 90;
 const GAP = 8;
 const CORNER = 9;
 const PADDING = 20;
-const ACTIVE_FILL = '#5ca7ff';
-const INACTIVE_FILL = '#25272d';
+const CELL_FILL = '#5ca7ff';
 
 export function exportStandaloneSvg(state) {
   const gridSize = state.gridSize;
@@ -13,7 +12,8 @@ export function exportStandaloneSvg(state) {
   const viewSize = totalSize + PADDING * 2;
 
   const activeCells = [...state.activeCells].map(parseCellKey);
-  const activeLookup = new Set(activeCells.map((cell) => `${cell.row}:${cell.col}`));
+  const ordered = orderCells(activeCells, state.pattern, gridSize, state.direction);
+  const initialFrame = buildBinaryFrameForMode(ordered, state.pattern, 0);
 
   const rects = [];
   for (let row = 0; row < gridSize; row += 1) {
@@ -21,11 +21,9 @@ export function exportStandaloneSvg(state) {
       const x = PADDING + col * (CELL_SIZE + GAP);
       const y = PADDING + row * (CELL_SIZE + GAP);
       const key = `${row}:${col}`;
-      const isActive = activeLookup.has(key);
-      const fill = isActive ? ACTIVE_FILL : INACTIVE_FILL;
-      const opacity = isActive ? '1' : '1';
+      const initialOpacity = initialFrame[key] ?? 0;
       rects.push(
-        `<rect data-key="${key}" data-active="${isActive}" x="${x}" y="${y}" width="${CELL_SIZE}" height="${CELL_SIZE}" rx="${CORNER}" fill="${fill}" fill-opacity="${opacity}" />`
+        `<rect data-key="${key}" x="${x}" y="${y}" width="${CELL_SIZE}" height="${CELL_SIZE}" rx="${CORNER}" fill="${CELL_FILL}" fill-opacity="${initialOpacity}" />`
       );
     }
   }
@@ -36,7 +34,8 @@ export function exportStandaloneSvg(state) {
     speed: state.fps,
     animationStyle: state.animationStyle,
     direction: state.pattern === 'directional' ? state.direction ?? 'right' : null,
-    activeCells
+    activeCells,
+    fill: CELL_FILL
   };
 
   const scriptData = JSON.stringify(payload).replace(/</g, '\\u003c');
@@ -47,28 +46,26 @@ export function exportStandaloneSvg(state) {
   <script><![CDATA[
     (function () {
       const config = ${scriptData};
-      const activeFill = '${ACTIVE_FILL}';
-      const inactiveFill = '${INACTIVE_FILL}';
       const root = document.documentElement;
       const cells = Array.from(root.querySelectorAll('rect')).map((el) => {
         const [row, col] = (el.getAttribute('data-key') || '0:0').split(':').map(Number);
-        return {
-          el,
-          key: row + ":" + col,
-          row,
-          col,
-          active: el.getAttribute('data-active') === 'true'
-        };
+        return { el, key: row + ':' + col, row, col };
       });
 
-      const activeCells = cells.filter((cell) => cell.active);
+      const activeSet = new Set((config.activeCells || []).map((cell) => cell.row + ':' + cell.col));
+      const activeCells = cells.filter((cell) => activeSet.has(cell.key));
       const mode = config.mode;
       const style = config.animationStyle;
       const speed = Number(config.speed) || 1;
       const direction = config.direction;
       const gridSize = Number(config.gridSize) || 5;
+      const fill = config.fill || '${CELL_FILL}';
 
-      let ordered = orderCells(activeCells, mode, gridSize, direction);
+      for (const cell of cells) {
+        cell.el.setAttribute('fill', fill);
+      }
+
+      const ordered = orderCells(activeCells, mode, gridSize, direction);
       let last = performance.now();
       let timeMs = 0;
 
@@ -79,14 +76,7 @@ export function exportStandaloneSvg(state) {
 
         const frame = buildFrame(ordered, mode, style, speed, timeMs);
         for (const cell of cells) {
-          if (!cell.active) {
-            cell.el.setAttribute('fill', inactiveFill);
-            cell.el.setAttribute('fill-opacity', '1');
-            continue;
-          }
-
-          const opacity = frame[cell.key] ?? 1;
-          cell.el.setAttribute('fill', activeFill);
+          const opacity = frame[cell.key] ?? 0;
           cell.el.setAttribute('fill-opacity', String(opacity));
         }
 
@@ -224,6 +214,82 @@ export function exportStandaloneSvg(state) {
 </svg>`;
 
   downloadText(svgContent, 'animation.svg', 'image/svg+xml');
+}
+
+function buildBinaryFrameForMode(cellsOrdered, mode, step) {
+  if (cellsOrdered.length === 0) {
+    return {};
+  }
+
+  if (mode === 'blink') {
+    const frame = {};
+    const opacity = Math.floor(step) % 2 === 0 ? 1 : 0;
+    for (const cell of cellsOrdered) {
+      frame[cell.key] = opacity;
+    }
+    return frame;
+  }
+
+  if (mode === 'directional') {
+    const frame = {};
+    const layerCount = Math.max(...cellsOrdered.map((cell) => cell.layer)) + 1;
+    const activeLayer = Math.floor(step) % layerCount;
+    for (const cell of cellsOrdered) {
+      frame[cell.key] = cell.layer === activeLayer ? 1 : 0;
+    }
+    return frame;
+  }
+
+  const frame = {};
+  const index = Math.floor(step) % cellsOrdered.length;
+  for (let i = 0; i < cellsOrdered.length; i += 1) {
+    frame[cellsOrdered[i].key] = i === index ? 1 : 0;
+  }
+  return frame;
+}
+
+function orderCells(activeCells, mode, gridSize, direction) {
+  if (mode === 'spinner') {
+    const center = (gridSize - 1) / 2;
+    return activeCells
+      .map((cell) => ({
+        ...cell,
+        key: `${cell.row}:${cell.col}`,
+        angle: Math.atan2(cell.row - center, cell.col - center)
+      }))
+      .sort((a, b) => a.angle - b.angle);
+  }
+
+  if (mode === 'linear' || mode === 'blink') {
+    return activeCells
+      .map((cell) => ({ ...cell, key: `${cell.row}:${cell.col}` }))
+      .sort((a, b) => a.row - b.row || a.col - b.col);
+  }
+
+  if (mode === 'directional') {
+    return activeCells
+      .map((cell) => ({
+        ...cell,
+        key: `${cell.row}:${cell.col}`,
+        layer: directionalLayer(cell.row, cell.col, gridSize, direction)
+      }))
+      .sort((a, b) => a.layer - b.layer || a.row - b.row || a.col - b.col);
+  }
+
+  return [];
+}
+
+function directionalLayer(row, col, gridSize, direction) {
+  if (direction === 'right') {
+    return col;
+  }
+  if (direction === 'left') {
+    return gridSize - 1 - col;
+  }
+  if (direction === 'down') {
+    return row;
+  }
+  return gridSize - 1 - row;
 }
 
 function downloadText(content, filename, mimeType) {
