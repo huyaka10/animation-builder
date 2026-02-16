@@ -9,6 +9,7 @@ import {
   saveProject
 } from './projectStore.js';
 import { createRenderer } from './renderer.js';
+import { exportStandaloneSvg } from './exportSvg.js';
 import { createInitialState, parseCellKey, toggleCell } from './state.js';
 
 const state = createInitialState();
@@ -24,6 +25,7 @@ const ui = {
   previewToggle: document.querySelector('#previewToggle'),
   captureBtn: document.querySelector('#captureBtn'),
   exportBtn: document.querySelector('#exportBtn'),
+  exportSvgBtn: document.querySelector('#exportSvgBtn'),
   exportOutput: document.querySelector('#exportOutput'),
   patternList: document.querySelector('#patternList'),
   exportProjectBtn: document.querySelector('#exportProjectBtn'),
@@ -101,6 +103,11 @@ ui.exportBtn.addEventListener('click', () => {
 
 ui.exportProjectBtn.addEventListener('click', () => {
   downloadProject(state.patternStore);
+});
+
+
+ui.exportSvgBtn.addEventListener('click', () => {
+  exportStandaloneSvg(state);
 });
 
 ui.importProjectBtn.addEventListener('click', () => {
