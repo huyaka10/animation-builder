@@ -6,8 +6,6 @@
   --stage: #06090f;
   --text: #dce7ff;
   --muted: #90a0bc;
-  --inactive: #25272d;
-  --active: #5ca7ff;
 }
 
 * {
@@ -28,7 +26,7 @@ body {
 .app-shell {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 1fr 330px;
+  grid-template-columns: 1fr 340px;
 }
 
 .stage-wrap {
@@ -39,7 +37,8 @@ body {
 }
 
 h1,
-h2 {
+h2,
+h3 {
   margin: 0;
 }
 
@@ -47,6 +46,11 @@ h1 {
   font-size: 1rem;
   font-weight: 600;
   color: var(--muted);
+}
+
+h3 {
+  font-size: 0.95rem;
+  color: #c8d7f5;
 }
 
 .stage-card {
@@ -109,10 +113,48 @@ input[type='range'] {
   background: #1f6feb;
 }
 
+.patterns-wrap {
+  border-top: 1px solid #2a3447;
+  padding-top: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.pattern-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  max-height: 190px;
+  overflow: auto;
+}
+
+.pattern-item {
+  text-align: left;
+  background: #1d2432;
+}
+
+.pattern-item.active {
+  border-color: #3c8cff;
+  background: #1c3f74;
+}
+
+.pattern-empty {
+  color: var(--muted);
+  font-size: 0.9rem;
+  padding: 6px 2px;
+}
+
+.project-actions {
+  display: grid;
+  gap: 8px;
+}
+
 .output {
   margin: 0;
-  min-height: 130px;
-  max-height: 260px;
+  min-height: 110px;
+  max-height: 220px;
   overflow: auto;
   background: #101623;
   border: 1px solid #2a3447;

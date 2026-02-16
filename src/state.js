@@ -8,7 +8,9 @@ export function createInitialState() {
     animationStyle: 'binary',
     pattern: 'spinner',
     previewRunning: true,
-    timeMs: 0
+    timeMs: 0,
+    patternStore: [],
+    selectedPatternId: null
   };
 }
 
@@ -28,4 +30,28 @@ export function toggleCell(state, row, col) {
   } else {
     state.activeCells.add(key);
   }
+}
+
+export function toBooleanGrid(activeCells, gridSize) {
+  const matrix = [];
+  for (let row = 0; row < gridSize; row += 1) {
+    const rowData = [];
+    for (let col = 0; col < gridSize; col += 1) {
+      rowData.push(activeCells.has(cellKey(row, col)));
+    }
+    matrix.push(rowData);
+  }
+  return matrix;
+}
+
+export function fromBooleanGrid(grid, gridSize) {
+  const active = new Set();
+  for (let row = 0; row < gridSize; row += 1) {
+    for (let col = 0; col < gridSize; col += 1) {
+      if (grid[row]?.[col] === true) {
+        active.add(cellKey(row, col));
+      }
+    }
+  }
+  return active;
 }
