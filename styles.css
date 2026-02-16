@@ -1,0 +1,134 @@
+:root {
+  color-scheme: dark;
+  --bg: #0d111b;
+  --panel: #171c26;
+  --panel-border: #252d3a;
+  --stage: #06090f;
+  --text: #dce7ff;
+  --muted: #90a0bc;
+  --inactive: #25272d;
+  --active: #5ca7ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at center, #101827 0, var(--bg) 60%),
+    radial-gradient(circle, rgba(113, 146, 196, 0.16) 1px, transparent 1px);
+  background-size: auto, 24px 24px;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 330px;
+}
+
+.stage-wrap {
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  gap: 12px;
+}
+
+h1,
+h2 {
+  margin: 0;
+}
+
+h1 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.stage-card {
+  width: min(70vmin, 560px);
+  aspect-ratio: 1;
+  border-radius: 16px;
+  background: var(--stage);
+  border: 1px solid #111827;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+#stage {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
+.panel {
+  border-left: 1px solid var(--panel-border);
+  background: color-mix(in srgb, var(--panel) 90%, black);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+  font-size: 0.95rem;
+}
+
+.field span {
+  color: var(--muted);
+}
+
+select,
+input,
+button {
+  width: 100%;
+  border: 1px solid #2d3646;
+  border-radius: 10px;
+  background: #232a37;
+  color: var(--text);
+  padding: 10px 12px;
+}
+
+input[type='range'] {
+  padding: 0;
+}
+
+.btn {
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: #1f6feb;
+}
+
+.output {
+  margin: 0;
+  min-height: 130px;
+  max-height: 260px;
+  overflow: auto;
+  background: #101623;
+  border: 1px solid #2a3447;
+  border-radius: 10px;
+  padding: 12px;
+  color: #b7d2ff;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 920px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .panel {
+    border-left: 0;
+    border-top: 1px solid var(--panel-border);
+  }
+}

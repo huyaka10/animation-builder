@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SVG Animation Builder – Stage 1 MVP</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="app" class="app-shell">
+      <main class="stage-wrap">
+        <h1>Animation Builder · Stage 1</h1>
+        <section class="stage-card">
+          <svg id="stage" viewBox="0 0 520 520" aria-label="5 by 5 animation grid"></svg>
+        </section>
+      </main>
+
+      <aside class="panel">
+        <h2>Settings</h2>
+
+        <label class="field">
+          <span>Pattern</span>
+          <select id="patternSelect">
+            <option value="spinner">Spinner</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Speed (FPS): <strong id="fpsValue">12</strong></span>
+          <input id="fpsSlider" type="range" min="1" max="60" value="12" />
+        </label>
+
+        <label class="field">
+          <span>Animation Style</span>
+          <select id="styleSelect">
+            <option value="binary">Binary</option>
+            <option value="fade">Fade</option>
+          </select>
+        </label>
+
+        <button id="previewToggle" class="btn">Pause Preview</button>
+        <button id="exportBtn" class="btn btn-primary">Export JSON</button>
+
+        <pre id="exportOutput" class="output" aria-live="polite"></pre>
+      </aside>
+    </div>
+
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>
