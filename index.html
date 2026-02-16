@@ -56,11 +56,20 @@
           </select>
         </label>
 
+        <section class="selected-cell" id="selectedCellBlock">
+          <h3>Selected Cell</h3>
+          <div id="selectedCellCoords" class="muted">No cell selected</div>
+          <label class="field">
+            <span>Delay (ms)</span>
+            <input id="selectedDelayInput" type="number" min="0" step="10" disabled value="0" />
+          </label>
+        </section>
+
         <label class="field">
-          <span>Delay Step (ms)</span>
+          <span>Auto Distribute Delay Step (ms)</span>
           <div class="inline-row">
             <input id="delayStepInput" type="number" min="0" step="10" value="120" />
-            <button id="applyDelayBtn" class="btn" type="button">Apply</button>
+            <button id="autoDelayBtn" class="btn" type="button">Distribute</button>
           </div>
         </label>
 

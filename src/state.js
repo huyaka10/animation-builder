@@ -6,6 +6,7 @@ export function createInitialState() {
     gridSize: GRID_SIZE,
     activeCells: new Set(),
     cellDelays: createZeroDelayMatrix(GRID_SIZE),
+    selectedCell: null,
     fps: 12,
     animationStyle: 'binary',
     pattern: 'spinner',

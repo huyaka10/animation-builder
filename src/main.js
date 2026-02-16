@@ -17,6 +17,7 @@ import {
   fromBooleanGrid,
   parseCellKey,
   sanitizeDelayMatrix,
+  setCellDelay,
   toBooleanGrid,
   toggleCell
 } from './state.js';
@@ -31,8 +32,10 @@ const ui = {
   fpsValue: document.querySelector('#fpsValue'),
   styleSelect: document.querySelector('#styleSelect'),
   colorInput: document.querySelector('#colorInput'),
+  selectedCellCoords: document.querySelector('#selectedCellCoords'),
+  selectedDelayInput: document.querySelector('#selectedDelayInput'),
   delayStepInput: document.querySelector('#delayStepInput'),
-  applyDelayBtn: document.querySelector('#applyDelayBtn'),
+  autoDelayBtn: document.querySelector('#autoDelayBtn'),
   patternSelect: document.querySelector('#patternSelect'),
   directionGroup: document.querySelector('#directionGroup'),
   directionButtons: document.querySelectorAll('[data-direction]'),
@@ -51,7 +54,9 @@ const ui = {
 };
 
 const renderer = createRenderer(ui.svg, state, (row, col) => {
+  state.selectedCell = { row, col };
   toggleCell(state, row, col);
+  syncSelectedCellPanel();
   autoUpdateSelectedPattern();
 });
 
@@ -76,7 +81,17 @@ ui.colorInput.addEventListener('input', (event) => {
   autoUpdateSelectedPattern();
 });
 
-ui.applyDelayBtn.addEventListener('click', () => {
+ui.selectedDelayInput.addEventListener('input', (event) => {
+  if (!state.selectedCell) {
+    return;
+  }
+  setCellDelay(state, state.selectedCell.row, state.selectedCell.col, Number(event.target.value));
+  state.previewRunning = true;
+  syncPreviewButton();
+  autoUpdateSelectedPattern();
+});
+
+ui.autoDelayBtn.addEventListener('click', () => {
   const stepMs = Number(ui.delayStepInput.value);
   if (!Number.isFinite(stepMs) || stepMs < 0) {
     ui.exportOutput.textContent = 'Delay Step must be a non-negative number.';
@@ -86,6 +101,7 @@ ui.applyDelayBtn.addEventListener('click', () => {
   distributeDelays(stepMs);
   state.previewRunning = true;
   syncPreviewButton();
+  syncSelectedCellPanel();
   autoUpdateSelectedPattern();
 });
 
@@ -175,6 +191,7 @@ ui.deletePatternBtn.addEventListener('click', () => {
     const fallback = state.patternStore[index] ?? state.patternStore[index - 1] ?? null;
     if (fallback) {
       applyPatternToState(state, fallback);
+      state.selectedCell = null;
     } else {
       clearScene();
     }
@@ -226,6 +243,7 @@ ui.importProjectInput.addEventListener('change', async (event) => {
 
     state.patternStore = normalizeProject(parsed);
     state.selectedPatternId = null;
+    state.selectedCell = null;
     if (state.patternStore[0]) {
       applyPatternToState(state, state.patternStore[0]);
     } else {
@@ -304,6 +322,7 @@ function renderPatternList() {
 
     button.addEventListener('click', () => {
       applyPatternToState(state, pattern);
+      state.selectedCell = null;
       syncControlsFromState();
       syncPreviewButton();
       renderPatternList();
@@ -362,6 +381,7 @@ function renderMiniPreviews(timeMs) {
     const frame = getAnimationFrame({
       activeCells: preview.activeSet,
       cellDelays: preview.cellDelays,
+      selectedCell: null,
       previewRunning: true,
       pattern: preview.pattern.mode,
       direction: preview.pattern.direction,
@@ -386,7 +406,22 @@ function syncControlsFromState() {
   ui.colorInput.value = state.color;
   syncDirectionVisibility();
   syncDirectionButtons();
+  syncSelectedCellPanel();
   syncActionButtons();
+}
+
+function syncSelectedCellPanel() {
+  if (!state.selectedCell) {
+    ui.selectedCellCoords.textContent = 'No cell selected';
+    ui.selectedDelayInput.value = '0';
+    ui.selectedDelayInput.disabled = true;
+    return;
+  }
+
+  const { row, col } = state.selectedCell;
+  ui.selectedCellCoords.textContent = `Row: ${row}, Column: ${col}`;
+  ui.selectedDelayInput.value = String(state.cellDelays[row]?.[col] ?? 0);
+  ui.selectedDelayInput.disabled = false;
 }
 
 function syncDirectionVisibility() {
@@ -466,7 +501,9 @@ function findSelectedPattern() {
 function clearScene() {
   state.activeCells = new Set();
   state.cellDelays = createZeroDelayMatrix(state.gridSize);
+  state.selectedCell = null;
   state.selectedPatternId = null;
+  syncSelectedCellPanel();
   syncActionButtons();
 }
 
