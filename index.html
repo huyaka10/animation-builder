@@ -27,9 +27,7 @@
       <aside class="panel">
         <h2>Settings</h2>
 
-        <div class="field">
-          <span id="frameInfo">Frame 1 / 1</span>
-        </div>
+        <div class="field"><span id="frameInfo">Frame 1 / 1</span></div>
 
         <label class="field">
           <span>Speed (FPS): <strong id="fpsValue">12</strong></span>
@@ -39,8 +37,8 @@
         <label class="field">
           <span>Animation Style</span>
           <select id="styleSelect">
-            <option value="binary">Binary</option>
-            <option value="fade">Fade</option>
+            <option value="Binary">Binary</option>
+            <option value="Fade">Fade</option>
           </select>
         </label>
 
@@ -50,6 +48,13 @@
         </label>
 
         <button id="previewToggle" class="btn">Pause Preview</button>
+
+        <section class="preset-panel">
+          <h3>Presets</h3>
+          <button id="capturePatternBtn" class="btn" type="button">Capture Pattern</button>
+          <ul id="presetList" class="preset-list" aria-label="Saved presets"></ul>
+        </section>
+
         <button id="exportJsonBtn" class="btn btn-primary">Export JSON</button>
         <button id="importJsonBtn" class="btn" type="button">Import JSON</button>
         <input id="importJsonInput" type="file" accept="application/json" hidden />

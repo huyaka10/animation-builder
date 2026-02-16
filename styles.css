@@ -189,3 +189,25 @@ input[type='color'] {
     border-top: 1px solid var(--panel-border);
   }
 }
+
+
+.preset-panel {
+  border-top: 1px solid #2a3447;
+  padding-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.preset-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+  max-height: 140px;
+  overflow: auto;
+}
+
+.preset-item {
+  text-align: left;
+}

@@ -2,12 +2,10 @@ import { normalizeAnimationPayload } from './frameStore.js';
 
 export function exportAnimationJson(state, outputEl) {
   const payload = {
-    animation: {
-      frames: state.animation.frames,
-      fps: state.animation.fps,
-      animationStyle: state.animation.animationStyle,
-      color: state.animation.color
-    }
+    frames: state.animation.frames,
+    fps: state.animation.fps,
+    animationStyle: state.animation.animationStyle,
+    color: state.animation.color
   };
   outputEl.textContent = JSON.stringify(payload, null, 2);
   downloadText(JSON.stringify(payload, null, 2), 'animation.json', 'application/json');
@@ -23,8 +21,10 @@ export async function importAnimationJson(file, state) {
 
   state.animation = normalized;
   state.activeFrameIndex = 0;
-  state.previewTimeMs = 0;
-  state.playbackFrameIndex = 0;
+  state.playbackCurrentIndex = 0;
+  state.playbackPrevIndex = 0;
+  state.playbackBlend = 0;
+  state.playbackAccumulatorMs = 0;
 }
 
 export function exportStandaloneSvg(state) {
@@ -69,8 +69,12 @@ export function exportStandaloneSvg(state) {
       const fps = animation.fps;
       const style = animation.animationStyle;
       const color = animation.color;
+      const frameDuration = 1000 / fps;
       let last = performance.now();
-      let timeMs = 0;
+      let accumulator = 0;
+      let current = 0;
+      let previous = 0;
+      let blend = 0;
 
       for (const cell of cells) {
         cell.setAttribute('fill', color);
@@ -79,23 +83,23 @@ export function exportStandaloneSvg(state) {
       function loop(now) {
         const delta = now - last;
         last = now;
-        timeMs += delta;
+        accumulator += delta;
 
-        const step = (timeMs / 1000) * fps;
-        const indexA = Math.floor(step) % count;
-        const indexB = (indexA + 1) % count;
-        const t = step - Math.floor(step);
+        while (accumulator >= frameDuration) {
+          accumulator -= frameDuration;
+          previous = current;
+          current = (current + 1) % count;
+        }
+
+        blend = frameDuration > 0 ? accumulator / frameDuration : 0;
 
         for (const cell of cells) {
           const r = Number(cell.getAttribute('data-row'));
           const c = Number(cell.getAttribute('data-col'));
-          const a = frames[indexA][r][c] ? 1 : 0;
-          if (style === 'binary') {
-            cell.setAttribute('fill-opacity', String(a));
-          } else {
-            const b = frames[indexB][r][c] ? 1 : 0;
-            cell.setAttribute('fill-opacity', String(Number((a * (1 - t) + b * t).toFixed(3))));
-          }
+          const a = frames[previous][r][c] ? 1 : 0;
+          const b = frames[current][r][c] ? 1 : 0;
+          const value = style === 'Binary' ? b : Number((a * (1 - blend) + b * blend).toFixed(3));
+          cell.setAttribute('fill-opacity', String(value));
         }
 
         requestAnimationFrame(loop);

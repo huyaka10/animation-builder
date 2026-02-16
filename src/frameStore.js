@@ -9,20 +9,39 @@ export function cloneFrame(frame) {
   return frame.map((row) => row.slice());
 }
 
+export function cloneAnimation(animation) {
+  return {
+    frames: animation.frames.map((frame) => cloneFrame(frame)),
+    fps: animation.fps,
+    animationStyle: animation.animationStyle,
+    color: animation.color
+  };
+}
+
 export function createInitialState() {
   return {
     gridSize: GRID_SIZE,
     animation: {
       frames: [createEmptyFrame(GRID_SIZE)],
       fps: 12,
-      animationStyle: 'binary',
+      animationStyle: 'Binary',
       color: DEFAULT_COLOR
     },
     activeFrameIndex: 0,
     previewRunning: true,
-    previewTimeMs: 0,
-    playbackFrameIndex: 0
+    playbackCurrentIndex: 0,
+    playbackPrevIndex: 0,
+    playbackBlend: 0,
+    playbackAccumulatorMs: 0,
+    presets: []
   };
+}
+
+export function resetPlayback(state) {
+  state.playbackCurrentIndex = state.activeFrameIndex;
+  state.playbackPrevIndex = state.activeFrameIndex;
+  state.playbackBlend = 0;
+  state.playbackAccumulatorMs = 0;
 }
 
 export function toggleCellInActiveFrame(state, row, col) {
@@ -34,6 +53,7 @@ export function addFrameAfterActive(state) {
   const index = state.activeFrameIndex + 1;
   state.animation.frames.splice(index, 0, createEmptyFrame(state.gridSize));
   state.activeFrameIndex = index;
+  resetPlayback(state);
 }
 
 export function duplicateActiveFrame(state) {
@@ -41,6 +61,7 @@ export function duplicateActiveFrame(state) {
   const index = state.activeFrameIndex + 1;
   state.animation.frames.splice(index, 0, cloneFrame(source));
   state.activeFrameIndex = index;
+  resetPlayback(state);
 }
 
 export function deleteActiveFrame(state) {
@@ -50,6 +71,7 @@ export function deleteActiveFrame(state) {
 
   state.animation.frames.splice(state.activeFrameIndex, 1);
   state.activeFrameIndex = Math.min(state.activeFrameIndex, state.animation.frames.length - 1);
+  resetPlayback(state);
   return true;
 }
 
@@ -72,6 +94,7 @@ export function moveFrame(state, fromIndex, toIndex) {
   } else if (fromIndex > state.activeFrameIndex && toIndex <= state.activeFrameIndex) {
     state.activeFrameIndex += 1;
   }
+  resetPlayback(state);
 }
 
 export function normalizeAnimationPayload(payload) {
@@ -84,7 +107,7 @@ export function normalizeAnimationPayload(payload) {
     return null;
   }
 
-  if (payload.animationStyle !== 'binary' && payload.animationStyle !== 'fade') {
+  if (payload.animationStyle !== 'Binary' && payload.animationStyle !== 'Fade') {
     return null;
   }
 
@@ -109,6 +132,33 @@ export function normalizeAnimationPayload(payload) {
   };
 }
 
+export function createPresetFromAnimation(animation, existingCount) {
+  return {
+    id: crypto.randomUUID ? crypto.randomUUID() : `preset-${Date.now()}`,
+    name: `Pattern ${existingCount + 1}`,
+    animation: cloneAnimation(animation)
+  };
+}
+
+export function normalizePresets(rawPresets) {
+  if (!Array.isArray(rawPresets)) {
+    return [];
+  }
+
+  return rawPresets
+    .map((preset) => {
+      if (!preset || typeof preset !== 'object' || typeof preset.id !== 'string' || typeof preset.name !== 'string') {
+        return null;
+      }
+      const animation = normalizeAnimationPayload(preset.animation);
+      if (!animation) {
+        return null;
+      }
+      return { id: preset.id, name: preset.name, animation };
+    })
+    .filter(Boolean);
+}
+
 function normalizeFrame(frame, gridSize) {
   if (!Array.isArray(frame) || frame.length !== gridSize) {
     return null;
@@ -119,9 +169,7 @@ function normalizeFrame(frame, gridSize) {
     if (!Array.isArray(frame[row]) || frame[row].length !== gridSize) {
       return null;
     }
-    normalized.push(
-      frame[row].map((cell) => (cell === true || cell === 1 ? 1 : 0))
-    );
+    normalized.push(frame[row].map((cell) => (cell === true || cell === 1 ? 1 : 0)));
   }
 
   return normalized;

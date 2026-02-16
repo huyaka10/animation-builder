@@ -1,22 +1,36 @@
 import { cloneFrame } from './frameStore.js';
 
-export function getPreviewFrame(state) {
+export function advancePreview(state, deltaMs) {
   const frames = state.animation.frames;
-  const count = frames.length;
-  const fps = state.animation.fps;
-  const step = (state.previewTimeMs / 1000) * fps;
-
-  const fromIndex = Math.floor(step) % count;
-  const toIndex = (fromIndex + 1) % count;
-  const t = step - Math.floor(step);
-
-  state.playbackFrameIndex = fromIndex;
-
-  if (!state.previewRunning || state.animation.animationStyle === 'binary') {
-    return cloneFrame(frames[fromIndex]);
+  const frameCount = frames.length;
+  if (frameCount === 0) {
+    return createBlankFrame(state.gridSize);
   }
 
-  return interpolateFrames(frames[fromIndex], frames[toIndex], t);
+  const frameDuration = 1000 / state.animation.fps;
+
+  if (state.previewRunning) {
+    state.playbackAccumulatorMs += deltaMs;
+
+    while (state.playbackAccumulatorMs >= frameDuration) {
+      state.playbackAccumulatorMs -= frameDuration;
+      state.playbackPrevIndex = state.playbackCurrentIndex;
+      state.playbackCurrentIndex = (state.playbackCurrentIndex + 1) % frameCount;
+      state.activeFrameIndex = state.playbackCurrentIndex;
+    }
+
+    state.playbackBlend = frameDuration > 0 ? state.playbackAccumulatorMs / frameDuration : 0;
+  }
+
+  if (state.animation.animationStyle === 'Binary') {
+    return cloneFrame(frames[state.playbackCurrentIndex]);
+  }
+
+  return interpolateFrames(
+    frames[state.playbackPrevIndex],
+    frames[state.playbackCurrentIndex],
+    state.playbackBlend
+  );
 }
 
 function interpolateFrames(a, b, t) {
@@ -29,4 +43,8 @@ function interpolateFrames(a, b, t) {
     out.push(rowOut);
   }
   return out;
+}
+
+function createBlankFrame(gridSize) {
+  return Array.from({ length: gridSize }, () => Array.from({ length: gridSize }, () => 0));
 }

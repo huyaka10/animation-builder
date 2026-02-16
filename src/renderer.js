@@ -17,7 +17,8 @@ export function createRenderer(svg, state, onCellClick) {
       rect.setAttribute('width', String(CELL_SIZE));
       rect.setAttribute('height', String(CELL_SIZE));
       rect.setAttribute('rx', String(CORNER));
-      rect.setAttribute('fill', '#25272d');
+      rect.setAttribute('fill', state.animation.color);
+      rect.setAttribute('fill-opacity', '0');
       rect.setAttribute('stroke', '#0f1724');
       rect.setAttribute('stroke-width', '1');
       rect.style.cursor = 'pointer';
@@ -30,15 +31,12 @@ export function createRenderer(svg, state, onCellClick) {
 
   return {
     render(displayFrame) {
-      const activeFrame = state.animation.frames[state.activeFrameIndex];
       for (let row = 0; row < state.gridSize; row += 1) {
         for (let col = 0; col < state.gridSize; col += 1) {
           const rect = cells[row][col];
           const opacity = Number(displayFrame[row][col] ?? 0);
-          const isActiveInEditor = activeFrame[row][col] === 1;
-
-          rect.setAttribute('fill', isActiveInEditor ? state.animation.color : '#25272d');
-          rect.setAttribute('fill-opacity', isActiveInEditor ? String(Math.max(opacity, 0.2)) : '1');
+          rect.setAttribute('fill', state.animation.color);
+          rect.setAttribute('fill-opacity', String(opacity));
         }
       }
     }

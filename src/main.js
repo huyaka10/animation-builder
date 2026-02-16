@@ -1,12 +1,15 @@
 import {
   addFrameAfterActive,
+  cloneAnimation,
   createInitialState,
+  createPresetFromAnimation,
   deleteActiveFrame,
   duplicateActiveFrame,
   moveFrame,
+  resetPlayback,
   toggleCellInActiveFrame
 } from './frameStore.js';
-import { getPreviewFrame } from './engine.js';
+import { advancePreview } from './engine.js';
 import { exportAnimationJson, exportStandaloneSvg, importAnimationJson } from './exportModule.js';
 import { loadProject, saveProject } from './projectStore.js';
 import { createRenderer } from './renderer.js';
@@ -15,8 +18,10 @@ import { renderTimeline } from './timelineUI.js';
 const state = createInitialState();
 const persisted = loadProject();
 if (persisted) {
-  state.animation = persisted;
+  state.animation = persisted.animation;
+  state.presets = persisted.presets;
 }
+resetPlayback(state);
 
 let draggedFrameIndex = null;
 
@@ -32,6 +37,8 @@ const ui = {
   styleSelect: document.querySelector('#styleSelect'),
   colorInput: document.querySelector('#colorInput'),
   previewToggle: document.querySelector('#previewToggle'),
+  capturePatternBtn: document.querySelector('#capturePatternBtn'),
+  presetList: document.querySelector('#presetList'),
   exportJsonBtn: document.querySelector('#exportJsonBtn'),
   importJsonBtn: document.querySelector('#importJsonBtn'),
   importJsonInput: document.querySelector('#importJsonInput'),
@@ -51,11 +58,7 @@ let last = performance.now();
 function loop(now) {
   const delta = now - last;
   last = now;
-  if (state.previewRunning) {
-    state.previewTimeMs += delta;
-  }
-
-  const displayFrame = getPreviewFrame(state);
+  const displayFrame = advancePreview(state, delta);
   renderer.render(displayFrame);
   requestAnimationFrame(loop);
 }
@@ -90,6 +93,7 @@ function bindControls() {
       return;
     }
     state.activeFrameIndex = Number(item.dataset.index);
+    resetPlayback(state);
     refreshUi();
   });
 
@@ -139,6 +143,13 @@ function bindControls() {
     ui.previewToggle.textContent = state.previewRunning ? 'Pause Preview' : 'Start Preview';
   });
 
+  ui.capturePatternBtn.addEventListener('click', () => {
+    const preset = createPresetFromAnimation(state.animation, state.presets.length);
+    state.presets.push(preset);
+    persist();
+    refreshPresetList();
+  });
+
   ui.exportJsonBtn.addEventListener('click', () => {
     exportAnimationJson(state, ui.exportOutput);
   });
@@ -155,6 +166,7 @@ function bindControls() {
 
     try {
       await importAnimationJson(file, state);
+      resetPlayback(state);
       persist();
       refreshUi();
       ui.exportOutput.textContent = 'Animation imported successfully.';
@@ -172,6 +184,7 @@ function bindControls() {
 
 function refreshUi() {
   renderTimeline(state, ui);
+  refreshPresetList();
   ui.frameInfo.textContent = `Frame ${state.activeFrameIndex + 1} / ${state.animation.frames.length}`;
   ui.fpsSlider.value = String(state.animation.fps);
   ui.fpsValue.textContent = String(state.animation.fps);
@@ -179,6 +192,33 @@ function refreshUi() {
   ui.colorInput.value = state.animation.color;
 }
 
+function refreshPresetList() {
+  ui.presetList.innerHTML = '';
+  if (state.presets.length === 0) {
+    const empty = document.createElement('li');
+    empty.className = 'timeline-label';
+    empty.textContent = 'No presets yet.';
+    ui.presetList.appendChild(empty);
+    return;
+  }
+
+  state.presets.forEach((preset) => {
+    const item = document.createElement('li');
+    const button = document.createElement('button');
+    button.className = 'btn preset-item';
+    button.textContent = preset.name;
+    button.addEventListener('click', () => {
+      state.animation = cloneAnimation(preset.animation);
+      state.activeFrameIndex = 0;
+      resetPlayback(state);
+      persist();
+      refreshUi();
+    });
+    item.appendChild(button);
+    ui.presetList.appendChild(item);
+  });
+}
+
 function persist() {
-  saveProject(state.animation);
+  saveProject({ animation: state.animation, presets: state.presets });
 }

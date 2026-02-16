@@ -1,9 +1,9 @@
-import { normalizeAnimationPayload } from './frameStore.js';
+import { normalizeAnimationPayload, normalizePresets } from './frameStore.js';
 
 export const PROJECT_STORAGE_KEY = 'animationBuilderProject';
 
-export function saveProject(animation) {
-  localStorage.setItem(PROJECT_STORAGE_KEY, JSON.stringify({ animation }));
+export function saveProject(project) {
+  localStorage.setItem(PROJECT_STORAGE_KEY, JSON.stringify(project));
 }
 
 export function loadProject() {
@@ -12,8 +12,15 @@ export function loadProject() {
     if (!raw) {
       return null;
     }
+
     const parsed = JSON.parse(raw);
-    return normalizeAnimationPayload(parsed?.animation ?? parsed);
+    const animation = normalizeAnimationPayload(parsed?.animation ?? parsed);
+    if (!animation) {
+      return null;
+    }
+
+    const presets = normalizePresets(parsed?.presets);
+    return { animation, presets };
   } catch {
     return null;
   }
