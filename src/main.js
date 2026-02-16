@@ -1,5 +1,6 @@
 import { getAnimationFrame } from './engine.js';
 import { exportStandaloneSvg } from './exportSvg.js';
+import { getPatternCells } from './patterns.js';
 import {
   applyPatternToState,
   createPatternFromState,
@@ -12,8 +13,10 @@ import {
 import { createRenderer } from './renderer.js';
 import {
   createInitialState,
+  createZeroDelayMatrix,
   fromBooleanGrid,
   parseCellKey,
+  sanitizeDelayMatrix,
   toBooleanGrid,
   toggleCell
 } from './state.js';
@@ -28,6 +31,8 @@ const ui = {
   fpsValue: document.querySelector('#fpsValue'),
   styleSelect: document.querySelector('#styleSelect'),
   colorInput: document.querySelector('#colorInput'),
+  delayStepInput: document.querySelector('#delayStepInput'),
+  applyDelayBtn: document.querySelector('#applyDelayBtn'),
   patternSelect: document.querySelector('#patternSelect'),
   directionGroup: document.querySelector('#directionGroup'),
   directionButtons: document.querySelectorAll('[data-direction]'),
@@ -68,6 +73,19 @@ ui.styleSelect.addEventListener('change', (event) => {
 
 ui.colorInput.addEventListener('input', (event) => {
   state.color = event.target.value;
+  autoUpdateSelectedPattern();
+});
+
+ui.applyDelayBtn.addEventListener('click', () => {
+  const stepMs = Number(ui.delayStepInput.value);
+  if (!Number.isFinite(stepMs) || stepMs < 0) {
+    ui.exportOutput.textContent = 'Delay Step must be a non-negative number.';
+    return;
+  }
+
+  distributeDelays(stepMs);
+  state.previewRunning = true;
+  syncPreviewButton();
   autoUpdateSelectedPattern();
 });
 
@@ -128,6 +146,7 @@ ui.duplicateBtn.addEventListener('click', () => {
 
   const duplicate = {
     ...pattern,
+    cellDelays: sanitizeDelayMatrix(pattern.cellDelays, pattern.gridSize),
     id: crypto.randomUUID ? crypto.randomUUID() : `pattern-${Date.now()}`,
     name: getUniqueName(`${pattern.name} Copy`)
   };
@@ -168,6 +187,7 @@ ui.exportBtn.addEventListener('click', () => {
   const payload = {
     gridSize: state.gridSize,
     activeCells: [...state.activeCells].map((key) => parseCellKey(key)),
+    cellDelays: state.cellDelays,
     speed: state.fps,
     animationStyle: state.animationStyle,
     selectedPattern: state.pattern,
@@ -257,12 +277,10 @@ function renderPatternList() {
 
     item.addEventListener('dragstart', () => {
       draggedPatternId = pattern.id;
-      item.classList.add('dragging');
     });
 
     item.addEventListener('dragend', () => {
       draggedPatternId = null;
-      item.classList.remove('dragging');
     });
 
     item.addEventListener('dragover', (event) => {
@@ -330,7 +348,12 @@ function createPatternPreviewSvg(pattern) {
     }
   }
 
-  miniPreviews.push({ pattern, activeSet, rectMap });
+  miniPreviews.push({
+    pattern,
+    activeSet,
+    rectMap,
+    cellDelays: sanitizeDelayMatrix(pattern.cellDelays, pattern.gridSize)
+  });
   return svg;
 }
 
@@ -338,6 +361,7 @@ function renderMiniPreviews(timeMs) {
   for (const preview of miniPreviews) {
     const frame = getAnimationFrame({
       activeCells: preview.activeSet,
+      cellDelays: preview.cellDelays,
       previewRunning: true,
       pattern: preview.pattern.mode,
       direction: preview.pattern.direction,
@@ -426,6 +450,7 @@ function captureCurrentPatternState(pattern) {
   return {
     name: pattern.name,
     activeCells: toBooleanGrid(state.activeCells, state.gridSize),
+    cellDelays: sanitizeDelayMatrix(state.cellDelays, state.gridSize),
     mode: state.pattern,
     direction: state.pattern === 'directional' ? state.direction ?? 'right' : null,
     speed: state.fps,
@@ -440,6 +465,7 @@ function findSelectedPattern() {
 
 function clearScene() {
   state.activeCells = new Set();
+  state.cellDelays = createZeroDelayMatrix(state.gridSize);
   state.selectedPatternId = null;
   syncActionButtons();
 }
@@ -461,4 +487,14 @@ function getUniqueName(baseName) {
     i += 1;
   }
   return `${baseName} ${i}`;
+}
+
+function distributeDelays(stepMs) {
+  state.cellDelays = createZeroDelayMatrix(state.gridSize);
+  const ordered = getPatternCells(state.pattern, state.activeCells, state.gridSize, state.direction);
+
+  for (let i = 0; i < ordered.length; i += 1) {
+    const cell = ordered[i];
+    state.cellDelays[cell.row][cell.col] = i * stepMs;
+  }
 }

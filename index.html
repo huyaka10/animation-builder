@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SVG Animation Builder – Stage 5</title>
+    <title>SVG Animation Builder – Stage 6</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div id="app" class="app-shell">
       <main class="stage-wrap">
-        <h1>Animation Builder · Stage 5</h1>
+        <h1>Animation Builder · Stage 6</h1>
         <section class="stage-card">
           <svg id="stage" viewBox="0 0 520 520" aria-label="5 by 5 animation grid"></svg>
         </section>
@@ -54,6 +54,14 @@
             <option value="binary">Binary</option>
             <option value="fade">Fade</option>
           </select>
+        </label>
+
+        <label class="field">
+          <span>Delay Step (ms)</span>
+          <div class="inline-row">
+            <input id="delayStepInput" type="number" min="0" step="10" value="120" />
+            <button id="applyDelayBtn" class="btn" type="button">Apply</button>
+          </div>
         </label>
 
         <button id="previewToggle" class="btn">Pause Preview</button>

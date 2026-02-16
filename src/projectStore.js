@@ -1,4 +1,4 @@
-import { DEFAULT_COLOR, fromBooleanGrid, toBooleanGrid } from './state.js';
+import { createZeroDelayMatrix, DEFAULT_COLOR, fromBooleanGrid, sanitizeDelayMatrix, toBooleanGrid } from './state.js';
 
 export const PROJECT_STORAGE_KEY = 'animationBuilderProject';
 const MODES = new Set(['spinner', 'blink', 'linear', 'directional']);
@@ -11,6 +11,7 @@ export function createPatternFromState(state) {
     name: `Pattern ${state.patternStore.length + 1}`,
     gridSize: state.gridSize,
     activeCells: toBooleanGrid(state.activeCells, state.gridSize),
+    cellDelays: sanitizeDelayMatrix(state.cellDelays, state.gridSize),
     mode: state.pattern,
     direction,
     speed: state.fps,
@@ -49,6 +50,7 @@ export function normalizeProject(payload) {
 export function applyPatternToState(state, pattern) {
   state.gridSize = pattern.gridSize;
   state.activeCells = fromBooleanGrid(pattern.activeCells, pattern.gridSize);
+  state.cellDelays = sanitizeDelayMatrix(pattern.cellDelays, pattern.gridSize);
   state.pattern = pattern.mode;
   state.direction = pattern.direction;
   state.fps = pattern.speed;
@@ -114,12 +116,16 @@ function normalizePattern(pattern) {
   }
 
   const color = isHexColor(pattern.color) ? pattern.color : DEFAULT_COLOR;
+  const cellDelays = pattern.cellDelays
+    ? sanitizeDelayMatrix(pattern.cellDelays, pattern.gridSize)
+    : createZeroDelayMatrix(pattern.gridSize);
 
   return {
     id: pattern.id,
     name: pattern.name,
     gridSize: pattern.gridSize,
     activeCells: pattern.activeCells,
+    cellDelays,
     mode,
     direction,
     speed: pattern.speed,

@@ -5,6 +5,7 @@ export function createInitialState() {
   return {
     gridSize: GRID_SIZE,
     activeCells: new Set(),
+    cellDelays: createZeroDelayMatrix(GRID_SIZE),
     fps: 12,
     animationStyle: 'binary',
     pattern: 'spinner',
@@ -30,6 +31,7 @@ export function toggleCell(state, row, col) {
   const key = cellKey(row, col);
   if (state.activeCells.has(key)) {
     state.activeCells.delete(key);
+    setCellDelay(state, row, col, 0);
   } else {
     state.activeCells.add(key);
   }
@@ -57,4 +59,32 @@ export function fromBooleanGrid(grid, gridSize) {
     }
   }
   return active;
+}
+
+export function createZeroDelayMatrix(gridSize) {
+  return Array.from({ length: gridSize }, () => Array.from({ length: gridSize }, () => 0));
+}
+
+export function sanitizeDelayMatrix(delays, gridSize) {
+  if (!Array.isArray(delays)) {
+    return createZeroDelayMatrix(gridSize);
+  }
+
+  const matrix = createZeroDelayMatrix(gridSize);
+  for (let row = 0; row < gridSize; row += 1) {
+    for (let col = 0; col < gridSize; col += 1) {
+      const value = Number(delays[row]?.[col]);
+      matrix[row][col] = Number.isFinite(value) && value >= 0 ? value : 0;
+    }
+  }
+  return matrix;
+}
+
+export function setCellDelay(state, row, col, value) {
+  const delay = Number(value);
+  state.cellDelays[row][col] = Number.isFinite(delay) && delay >= 0 ? delay : 0;
+}
+
+export function getCellDelayMs(state, row, col) {
+  return Number(state.cellDelays[row]?.[col] ?? 0) || 0;
 }

@@ -1,4 +1,4 @@
-import { parseCellKey } from './state.js';
+import { parseCellKey, sanitizeDelayMatrix } from './state.js';
 
 const CELL_SIZE = 90;
 const GAP = 8;
@@ -13,8 +13,7 @@ export function exportStandaloneSvg(state) {
   const viewSize = totalSize + PADDING * 2;
 
   const activeCells = [...state.activeCells].map(parseCellKey);
-  const ordered = orderCells(activeCells, state.pattern, gridSize, state.direction);
-  const initialFrame = buildBinaryFrameForMode(ordered, state.pattern, 0);
+  const delays = sanitizeDelayMatrix(state.cellDelays, gridSize);
 
   const rects = [];
   for (let row = 0; row < gridSize; row += 1) {
@@ -22,9 +21,8 @@ export function exportStandaloneSvg(state) {
       const x = PADDING + col * (CELL_SIZE + GAP);
       const y = PADDING + row * (CELL_SIZE + GAP);
       const key = `${row}:${col}`;
-      const initialOpacity = initialFrame[key] ?? 0;
       rects.push(
-        `<rect data-key="${key}" x="${x}" y="${y}" width="${CELL_SIZE}" height="${CELL_SIZE}" rx="${CORNER}" fill="${fillColor}" fill-opacity="${initialOpacity}" />`
+        `<rect data-key="${key}" x="${x}" y="${y}" width="${CELL_SIZE}" height="${CELL_SIZE}" rx="${CORNER}" fill="${fillColor}" fill-opacity="0" />`
       );
     }
   }
@@ -36,6 +34,7 @@ export function exportStandaloneSvg(state) {
     animationStyle: state.animationStyle,
     direction: state.pattern === 'directional' ? state.direction ?? 'right' : null,
     activeCells,
+    cellDelays: delays,
     fill: fillColor
   };
 
@@ -55,6 +54,7 @@ export function exportStandaloneSvg(state) {
 
       const activeSet = new Set((config.activeCells || []).map((cell) => cell.row + ':' + cell.col));
       const activeCells = cells.filter((cell) => activeSet.has(cell.key));
+      const delayMatrix = config.cellDelays || [];
       const mode = config.mode;
       const style = config.animationStyle;
       const speed = Number(config.speed) || 1;
@@ -74,8 +74,9 @@ export function exportStandaloneSvg(state) {
         const delta = now - last;
         last = now;
         timeMs += delta;
+        const step = (timeMs / 1000) * speed;
 
-        const frame = buildFrame(ordered, mode, style, speed, timeMs);
+        const frame = buildFrame(ordered, mode, style, step, speed, delayMatrix);
         for (const cell of cells) {
           const opacity = frame[cell.key] ?? 0;
           cell.el.setAttribute('fill-opacity', String(opacity));
@@ -86,80 +87,48 @@ export function exportStandaloneSvg(state) {
 
       requestAnimationFrame(loop);
 
-      function buildFrame(cellsOrdered, modeName, styleName, fps, elapsedMs) {
+      function buildFrame(cellsOrdered, modeName, styleName, step, fps, delays) {
         if (cellsOrdered.length === 0) {
           return {};
         }
 
-        const step = (elapsedMs / 1000) * fps;
+        const frame = {};
         if (modeName === 'blink') {
-          return buildBlinkFrame(cellsOrdered, step, styleName);
+          for (const cell of cellsOrdered) {
+            const delayedStep = step - delayToStep(cellDelay(delays, cell.row, cell.col), fps);
+            frame[cell.key] = styleName === 'binary' ? (Math.floor(delayedStep) % 2 === 0 ? 1 : 0) : pulse(delayedStep);
+          }
+          return frame;
         }
 
         if (modeName === 'directional') {
-          return buildDirectionalFrame(cellsOrdered, step, styleName);
-        }
-
-        return buildSequentialFrame(cellsOrdered, step, styleName);
-      }
-
-      function buildBlinkFrame(cellsOrdered, step, styleName) {
-        const frame = {};
-        if (styleName === 'binary') {
-          const opacity = Math.floor(step) % 2 === 0 ? 1 : 0;
+          const layerCount = Math.max.apply(null, cellsOrdered.map((cell) => cell.layer)) + 1;
           for (const cell of cellsOrdered) {
-            frame[cell.key] = opacity;
+            const delayedStep = step - delayToStep(cellDelay(delays, cell.row, cell.col), fps);
+            if (styleName === 'binary') {
+              const activeLayer = mod(Math.floor(delayedStep), layerCount);
+              frame[cell.key] = cell.layer === activeLayer ? 1 : 0;
+            } else {
+              const waveCenter = mod(delayedStep, layerCount);
+              const distance = cyclicDistance(cell.layer, waveCenter, layerCount);
+              frame[cell.key] = Number(Math.max(0, 1 - distance / Math.max(layerCount / 2, 1)).toFixed(3));
+            }
           }
           return frame;
         }
 
-        const opacity = pulse(step);
-        for (const cell of cellsOrdered) {
-          frame[cell.key] = opacity;
-        }
-        return frame;
-      }
-
-      function buildSequentialFrame(cellsOrdered, step, styleName) {
-        const frame = {};
-        if (styleName === 'binary') {
-          const index = Math.floor(step) % cellsOrdered.length;
-          for (let i = 0; i < cellsOrdered.length; i += 1) {
-            frame[cellsOrdered[i].key] = i === index ? 1 : 0;
+        const len = cellsOrdered.length;
+        for (let i = 0; i < len; i += 1) {
+          const cell = cellsOrdered[i];
+          const delayedStep = step - delayToStep(cellDelay(delays, cell.row, cell.col), fps);
+          if (styleName === 'binary') {
+            frame[cell.key] = mod(Math.floor(delayedStep), len) === i ? 1 : 0;
+          } else {
+            const center = mod(delayedStep, len);
+            const distance = cyclicDistance(i, center, len);
+            frame[cell.key] = Number(Math.max(0, 1 - distance / Math.max(len / 2, 1)).toFixed(3));
           }
-          return frame;
         }
-
-        const center = step % cellsOrdered.length;
-        for (let i = 0; i < cellsOrdered.length; i += 1) {
-          const distance = cyclicDistance(i, center, cellsOrdered.length);
-          const fade = Math.max(0, 1 - distance / Math.max(cellsOrdered.length / 2, 1));
-          frame[cellsOrdered[i].key] = Number(fade.toFixed(3));
-        }
-
-        return frame;
-      }
-
-      function buildDirectionalFrame(cellsOrdered, step, styleName) {
-        const frame = {};
-        const maxLayer = Math.max.apply(null, cellsOrdered.map((cell) => cell.layer));
-        const layerCount = maxLayer + 1;
-
-        if (styleName === 'binary') {
-          const activeLayer = Math.floor(step) % layerCount;
-          for (const cell of cellsOrdered) {
-            frame[cell.key] = cell.layer === activeLayer ? 1 : 0;
-          }
-          return frame;
-        }
-
-        const waveCenter = step % layerCount;
-        for (const cell of cellsOrdered) {
-          const distance = cyclicDistance(cell.layer, waveCenter, layerCount);
-          const fade = Math.max(0, 1 - distance / Math.max(layerCount / 2, 1));
-          frame[cell.key] = Number(fade.toFixed(3));
-        }
-
         return frame;
       }
 
@@ -167,10 +136,12 @@ export function exportStandaloneSvg(state) {
         if (modeName === 'spinner') {
           const center = (size - 1) / 2;
           return activeOnly
-            .map((cell) => {
-              const angle = Math.atan2(cell.row - center, cell.col - center);
-              return Object.assign({}, cell, { angle });
-            })
+            .map((cell) => ({
+              row: cell.row,
+              col: cell.col,
+              key: cell.key,
+              angle: Math.atan2(cell.row - center, cell.col - center)
+            }))
             .sort((a, b) => a.angle - b.angle);
         }
 
@@ -180,7 +151,12 @@ export function exportStandaloneSvg(state) {
 
         if (modeName === 'directional') {
           return activeOnly
-            .map((cell) => Object.assign({}, cell, { layer: directionalLayer(cell.row, cell.col, size, dir) }))
+            .map((cell) => ({
+              row: cell.row,
+              col: cell.col,
+              key: cell.key,
+              layer: directionalLayer(cell.row, cell.col, size, dir)
+            }))
             .sort((a, b) => a.layer - b.layer || a.row - b.row || a.col - b.col);
         }
 
@@ -188,20 +164,23 @@ export function exportStandaloneSvg(state) {
       }
 
       function directionalLayer(row, col, size, dir) {
-        if (dir === 'right') {
-          return col;
-        }
-        if (dir === 'left') {
-          return size - 1 - col;
-        }
-        if (dir === 'down') {
-          return row;
-        }
+        if (dir === 'right') return col;
+        if (dir === 'left') return size - 1 - col;
+        if (dir === 'down') return row;
         return size - 1 - row;
       }
 
+      function cellDelay(delays, row, col) {
+        const value = Number(delays[row] && delays[row][col]);
+        return Number.isFinite(value) && value >= 0 ? value : 0;
+      }
+
+      function delayToStep(delayMs, fps) {
+        return (delayMs / 1000) * fps;
+      }
+
       function pulse(step) {
-        const phase = step % 1;
+        const phase = mod(step, 1);
         const value = phase < 0.5 ? phase * 2 : (1 - phase) * 2;
         return Number(value.toFixed(3));
       }
@@ -210,87 +189,15 @@ export function exportStandaloneSvg(state) {
         const raw = Math.abs(index - center);
         return Math.min(raw, len - raw);
       }
+
+      function mod(value, len) {
+        return ((value % len) + len) % len;
+      }
     })();
   ]]></script>
 </svg>`;
 
   downloadText(svgContent, 'animation.svg', 'image/svg+xml');
-}
-
-function buildBinaryFrameForMode(cellsOrdered, mode, step) {
-  if (cellsOrdered.length === 0) {
-    return {};
-  }
-
-  if (mode === 'blink') {
-    const frame = {};
-    const opacity = Math.floor(step) % 2 === 0 ? 1 : 0;
-    for (const cell of cellsOrdered) {
-      frame[cell.key] = opacity;
-    }
-    return frame;
-  }
-
-  if (mode === 'directional') {
-    const frame = {};
-    const layerCount = Math.max(...cellsOrdered.map((cell) => cell.layer)) + 1;
-    const activeLayer = Math.floor(step) % layerCount;
-    for (const cell of cellsOrdered) {
-      frame[cell.key] = cell.layer === activeLayer ? 1 : 0;
-    }
-    return frame;
-  }
-
-  const frame = {};
-  const index = Math.floor(step) % cellsOrdered.length;
-  for (let i = 0; i < cellsOrdered.length; i += 1) {
-    frame[cellsOrdered[i].key] = i === index ? 1 : 0;
-  }
-  return frame;
-}
-
-function orderCells(activeCells, mode, gridSize, direction) {
-  if (mode === 'spinner') {
-    const center = (gridSize - 1) / 2;
-    return activeCells
-      .map((cell) => ({
-        ...cell,
-        key: `${cell.row}:${cell.col}`,
-        angle: Math.atan2(cell.row - center, cell.col - center)
-      }))
-      .sort((a, b) => a.angle - b.angle);
-  }
-
-  if (mode === 'linear' || mode === 'blink') {
-    return activeCells
-      .map((cell) => ({ ...cell, key: `${cell.row}:${cell.col}` }))
-      .sort((a, b) => a.row - b.row || a.col - b.col);
-  }
-
-  if (mode === 'directional') {
-    return activeCells
-      .map((cell) => ({
-        ...cell,
-        key: `${cell.row}:${cell.col}`,
-        layer: directionalLayer(cell.row, cell.col, gridSize, direction)
-      }))
-      .sort((a, b) => a.layer - b.layer || a.row - b.row || a.col - b.col);
-  }
-
-  return [];
-}
-
-function directionalLayer(row, col, gridSize, direction) {
-  if (direction === 'right') {
-    return col;
-  }
-  if (direction === 'left') {
-    return gridSize - 1 - col;
-  }
-  if (direction === 'down') {
-    return row;
-  }
-  return gridSize - 1 - row;
 }
 
 function downloadText(content, filename, mimeType) {
