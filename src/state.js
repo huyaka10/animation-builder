@@ -1,4 +1,5 @@
 export const GRID_SIZE = 5;
+export const DEFAULT_COLOR = '#5ca7ff';
 
 export function createInitialState() {
   return {
@@ -8,6 +9,7 @@ export function createInitialState() {
     animationStyle: 'binary',
     pattern: 'spinner',
     direction: null,
+    color: DEFAULT_COLOR,
     previewRunning: true,
     timeMs: 0,
     patternStore: [],

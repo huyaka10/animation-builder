@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SVG Animation Builder – Stage 3</title>
+    <title>SVG Animation Builder – Stage 5</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div id="app" class="app-shell">
       <main class="stage-wrap">
-        <h1>Animation Builder · Stage 3</h1>
+        <h1>Animation Builder · Stage 5</h1>
         <section class="stage-card">
           <svg id="stage" viewBox="0 0 520 520" aria-label="5 by 5 animation grid"></svg>
         </section>
@@ -39,6 +39,11 @@
         </div>
 
         <label class="field">
+          <span>Color</span>
+          <input id="colorInput" type="color" value="#5ca7ff" />
+        </label>
+
+        <label class="field">
           <span>Speed (FPS): <strong id="fpsValue">12</strong></span>
           <input id="fpsSlider" type="range" min="1" max="60" value="12" />
         </label>
@@ -53,6 +58,9 @@
 
         <button id="previewToggle" class="btn">Pause Preview</button>
         <button id="captureBtn" class="btn">Capture Pattern</button>
+        <button id="savePatternBtn" class="btn">Save Changes</button>
+        <button id="duplicateBtn" class="btn">Duplicate</button>
+        <button id="deletePatternBtn" class="btn btn-danger">Delete</button>
         <button id="exportBtn" class="btn btn-primary">Export JSON</button>
         <button id="exportSvgBtn" class="btn">Export SVG</button>
 

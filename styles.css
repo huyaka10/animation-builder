@@ -17,16 +17,13 @@ body {
   min-height: 100vh;
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   color: var(--text);
-  background:
-    radial-gradient(circle at center, #101827 0, var(--bg) 60%),
-    radial-gradient(circle, rgba(113, 146, 196, 0.16) 1px, transparent 1px);
-  background-size: auto, 24px 24px;
+  background: #0d111b;
 }
 
 .app-shell {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 1fr 340px;
+  grid-template-columns: 1fr 360px;
 }
 
 .stage-wrap {
@@ -59,7 +56,6 @@ h3 {
   border-radius: 16px;
   background: var(--stage);
   border: 1px solid #111827;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
   display: grid;
   place-items: center;
   padding: 16px;
@@ -73,11 +69,11 @@ h3 {
 
 .panel {
   border-left: 1px solid var(--panel-border);
-  background: color-mix(in srgb, var(--panel) 90%, black);
+  background: #131925;
   padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
 }
 
 .field {
@@ -105,6 +101,11 @@ input[type='range'] {
   padding: 0;
 }
 
+input[type='color'] {
+  padding: 2px;
+  height: 40px;
+}
+
 .btn {
   cursor: pointer;
 }
@@ -113,6 +114,10 @@ input[type='range'] {
   background: #1f6feb;
 }
 
+.btn-danger {
+  background: #6f2234;
+  border-color: #8e2a43;
+}
 
 .direction-grid {
   display: grid;
@@ -143,18 +148,45 @@ input[type='range'] {
   list-style: none;
   display: grid;
   gap: 8px;
-  max-height: 190px;
+  max-height: 280px;
   overflow: auto;
+}
+
+.pattern-row {
+  display: grid;
+  grid-template-columns: 54px 1fr 24px;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid #2d3646;
+  border-radius: 10px;
+  background: #1d2432;
+}
+
+.pattern-row.active {
+  border-color: #3c8cff;
+}
+
+.pattern-preview {
+  width: 52px;
+  height: 52px;
+  border-radius: 6px;
+  border: 1px solid #2d3646;
+  background: transparent;
 }
 
 .pattern-item {
   text-align: left;
-  background: #1d2432;
+  border: 0;
+  background: transparent;
+  padding: 0;
 }
 
-.pattern-item.active {
-  border-color: #3c8cff;
-  background: #1c3f74;
+.drag-handle {
+  text-align: center;
+  color: #8fa4cb;
+  cursor: grab;
+  user-select: none;
 }
 
 .pattern-empty {
@@ -170,8 +202,8 @@ input[type='range'] {
 
 .output {
   margin: 0;
-  min-height: 110px;
-  max-height: 220px;
+  min-height: 96px;
+  max-height: 180px;
   overflow: auto;
   background: #101623;
   border: 1px solid #2a3447;

@@ -31,7 +31,7 @@ export function createRenderer(svg, state, onCellClick) {
       for (const [key, rect] of cells.entries()) {
         const isActive = state.activeCells.has(key);
         const opacity = opacities[key] ?? (isActive ? 1 : 0);
-        rect.setAttribute('fill', isActive ? '#5ca7ff' : '#25272d');
+        rect.setAttribute('fill', isActive ? state.color : '#25272d');
         rect.setAttribute('fill-opacity', String(isActive ? opacity : 1));
       }
     }

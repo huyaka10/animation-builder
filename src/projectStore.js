@@ -1,4 +1,4 @@
-import { fromBooleanGrid, toBooleanGrid } from './state.js';
+import { DEFAULT_COLOR, fromBooleanGrid, toBooleanGrid } from './state.js';
 
 export const PROJECT_STORAGE_KEY = 'animationBuilderProject';
 const MODES = new Set(['spinner', 'blink', 'linear', 'directional']);
@@ -14,7 +14,8 @@ export function createPatternFromState(state) {
     mode: state.pattern,
     direction,
     speed: state.fps,
-    animationStyle: state.animationStyle
+    animationStyle: state.animationStyle,
+    color: state.color
   };
 }
 
@@ -52,6 +53,7 @@ export function applyPatternToState(state, pattern) {
   state.direction = pattern.direction;
   state.fps = pattern.speed;
   state.animationStyle = pattern.animationStyle;
+  state.color = pattern.color;
   state.previewRunning = true;
   state.selectedPatternId = pattern.id;
 }
@@ -111,6 +113,8 @@ function normalizePattern(pattern) {
     direction = 'right';
   }
 
+  const color = isHexColor(pattern.color) ? pattern.color : DEFAULT_COLOR;
+
   return {
     id: pattern.id,
     name: pattern.name,
@@ -119,6 +123,11 @@ function normalizePattern(pattern) {
     mode,
     direction,
     speed: pattern.speed,
-    animationStyle: pattern.animationStyle
+    animationStyle: pattern.animationStyle,
+    color
   };
+}
+
+function isHexColor(value) {
+  return typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value);
 }

@@ -4,9 +4,10 @@ const CELL_SIZE = 90;
 const GAP = 8;
 const CORNER = 9;
 const PADDING = 20;
-const CELL_FILL = '#5ca7ff';
+const DEFAULT_CELL_FILL = '#5ca7ff';
 
 export function exportStandaloneSvg(state) {
+  const fillColor = state.color || DEFAULT_CELL_FILL;
   const gridSize = state.gridSize;
   const totalSize = gridSize * CELL_SIZE + (gridSize - 1) * GAP;
   const viewSize = totalSize + PADDING * 2;
@@ -23,7 +24,7 @@ export function exportStandaloneSvg(state) {
       const key = `${row}:${col}`;
       const initialOpacity = initialFrame[key] ?? 0;
       rects.push(
-        `<rect data-key="${key}" x="${x}" y="${y}" width="${CELL_SIZE}" height="${CELL_SIZE}" rx="${CORNER}" fill="${CELL_FILL}" fill-opacity="${initialOpacity}" />`
+        `<rect data-key="${key}" x="${x}" y="${y}" width="${CELL_SIZE}" height="${CELL_SIZE}" rx="${CORNER}" fill="${fillColor}" fill-opacity="${initialOpacity}" />`
       );
     }
   }
@@ -35,7 +36,7 @@ export function exportStandaloneSvg(state) {
     animationStyle: state.animationStyle,
     direction: state.pattern === 'directional' ? state.direction ?? 'right' : null,
     activeCells,
-    fill: CELL_FILL
+    fill: fillColor
   };
 
   const scriptData = JSON.stringify(payload).replace(/</g, '\\u003c');
@@ -59,7 +60,7 @@ export function exportStandaloneSvg(state) {
       const speed = Number(config.speed) || 1;
       const direction = config.direction;
       const gridSize = Number(config.gridSize) || 5;
-      const fill = config.fill || '${CELL_FILL}';
+      const fill = config.fill || '${DEFAULT_CELL_FILL}';
 
       for (const cell of cells) {
         cell.el.setAttribute('fill', fill);
