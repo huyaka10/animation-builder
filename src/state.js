@@ -7,6 +7,7 @@ export function createInitialState() {
     fps: 12,
     animationStyle: 'binary',
     pattern: 'spinner',
+    direction: null,
     previewRunning: true,
     timeMs: 0,
     patternStore: [],

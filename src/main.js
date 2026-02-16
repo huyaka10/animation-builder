@@ -5,6 +5,7 @@ import {
   downloadProject,
   isValidProject,
   loadProject,
+  normalizeProject,
   saveProject
 } from './projectStore.js';
 import { createRenderer } from './renderer.js';
@@ -18,6 +19,8 @@ const ui = {
   fpsValue: document.querySelector('#fpsValue'),
   styleSelect: document.querySelector('#styleSelect'),
   patternSelect: document.querySelector('#patternSelect'),
+  directionGroup: document.querySelector('#directionGroup'),
+  directionButtons: document.querySelectorAll('[data-direction]'),
   previewToggle: document.querySelector('#previewToggle'),
   captureBtn: document.querySelector('#captureBtn'),
   exportBtn: document.querySelector('#exportBtn'),
@@ -33,7 +36,9 @@ const renderer = createRenderer(ui.svg, state, (row, col) => {
 });
 
 state.patternStore = loadProject();
+syncControlsFromState();
 renderPatternList();
+syncPreviewButton();
 
 ui.fpsSlider.addEventListener('input', (event) => {
   state.fps = Number(event.target.value);
@@ -46,6 +51,26 @@ ui.styleSelect.addEventListener('change', (event) => {
 
 ui.patternSelect.addEventListener('change', (event) => {
   state.pattern = event.target.value;
+  if (state.pattern !== 'directional') {
+    state.direction = null;
+  } else if (!state.direction) {
+    state.direction = 'right';
+  }
+
+  state.previewRunning = true;
+  syncControlsFromState();
+  syncPreviewButton();
+  updateSelectedPatternFromState();
+});
+
+ui.directionButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    state.direction = button.dataset.direction;
+    state.previewRunning = true;
+    syncDirectionButtons();
+    syncPreviewButton();
+    updateSelectedPatternFromState();
+  });
 });
 
 ui.previewToggle.addEventListener('click', () => {
@@ -67,7 +92,8 @@ ui.exportBtn.addEventListener('click', () => {
     activeCells: [...state.activeCells].map((key) => parseCellKey(key)),
     speed: state.fps,
     animationStyle: state.animationStyle,
-    selectedPattern: state.pattern
+    selectedPattern: state.pattern,
+    direction: state.direction
   };
 
   ui.exportOutput.textContent = JSON.stringify(payload, null, 2);
@@ -95,7 +121,7 @@ ui.importProjectInput.addEventListener('change', async (event) => {
       return;
     }
 
-    state.patternStore = parsed;
+    state.patternStore = normalizeProject(parsed);
     state.selectedPatternId = null;
     saveProject(state.patternStore);
     renderPatternList();
@@ -137,7 +163,9 @@ function renderPatternList() {
       button.classList.add('active');
     }
 
-    button.textContent = `${pattern.name} · ${pattern.animationStyle} · ${pattern.speed} FPS`;
+    const directionLabel = pattern.mode === 'directional' ? ` · ${pattern.direction}` : '';
+    button.textContent = `${pattern.name} · ${pattern.mode}${directionLabel} · ${pattern.animationStyle} · ${pattern.speed} FPS`;
+
     button.addEventListener('click', () => {
       applyPatternToState(state, pattern);
       syncControlsFromState();
@@ -155,8 +183,42 @@ function syncControlsFromState() {
   ui.fpsValue.textContent = String(state.fps);
   ui.styleSelect.value = state.animationStyle;
   ui.patternSelect.value = state.pattern;
+  syncDirectionVisibility();
+  syncDirectionButtons();
+}
+
+function syncDirectionVisibility() {
+  ui.directionGroup.hidden = state.pattern !== 'directional';
+}
+
+function syncDirectionButtons() {
+  ui.directionButtons.forEach((button) => {
+    const isActive = state.direction === button.dataset.direction;
+    button.classList.toggle('active', isActive);
+  });
 }
 
 function syncPreviewButton() {
   ui.previewToggle.textContent = state.previewRunning ? 'Pause Preview' : 'Start Preview';
+}
+
+function updateSelectedPatternFromState() {
+  if (!state.selectedPatternId) {
+    return;
+  }
+
+  const index = state.patternStore.findIndex((pattern) => pattern.id === state.selectedPatternId);
+  if (index < 0) {
+    return;
+  }
+
+  const current = state.patternStore[index];
+  state.patternStore[index] = {
+    ...current,
+    mode: state.pattern,
+    direction: state.pattern === 'directional' ? state.direction : null
+  };
+
+  saveProject(state.patternStore);
+  renderPatternList();
 }

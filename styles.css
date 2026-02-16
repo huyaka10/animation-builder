@@ -113,6 +113,23 @@ input[type='range'] {
   background: #1f6feb;
 }
 
+
+.direction-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.direction-btn {
+  padding: 8px 6px;
+  font-size: 1rem;
+}
+
+.direction-btn.active {
+  border-color: #3c8cff;
+  background: #1c3f74;
+}
+
 .patterns-wrap {
   border-top: 1px solid #2a3447;
   padding-top: 12px;

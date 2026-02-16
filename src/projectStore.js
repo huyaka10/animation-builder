@@ -1,14 +1,18 @@
 import { fromBooleanGrid, toBooleanGrid } from './state.js';
 
 export const PROJECT_STORAGE_KEY = 'animationBuilderProject';
+const MODES = new Set(['spinner', 'blink', 'linear', 'directional']);
+const DIRECTIONS = new Set(['right', 'left', 'up', 'down']);
 
 export function createPatternFromState(state) {
+  const direction = state.pattern === 'directional' ? state.direction ?? 'right' : null;
   return {
     id: crypto.randomUUID ? crypto.randomUUID() : `pattern-${Date.now()}`,
     name: `Pattern ${state.patternStore.length + 1}`,
     gridSize: state.gridSize,
     activeCells: toBooleanGrid(state.activeCells, state.gridSize),
-    mode: 'spinner',
+    mode: state.pattern,
+    direction,
     speed: state.fps,
     animationStyle: state.animationStyle
   };
@@ -24,24 +28,28 @@ export function loadProject() {
     if (!raw) {
       return [];
     }
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-    return parsed.filter(isValidPattern);
+    return normalizeProject(JSON.parse(raw));
   } catch {
     return [];
   }
 }
 
 export function isValidProject(payload) {
-  return Array.isArray(payload) && payload.every(isValidPattern);
+  return Array.isArray(payload) && payload.every((pattern) => normalizePattern(pattern) !== null);
+}
+
+export function normalizeProject(payload) {
+  if (!Array.isArray(payload)) {
+    return [];
+  }
+  return payload.map(normalizePattern).filter(Boolean);
 }
 
 export function applyPatternToState(state, pattern) {
   state.gridSize = pattern.gridSize;
   state.activeCells = fromBooleanGrid(pattern.activeCells, pattern.gridSize);
-  state.pattern = 'spinner';
+  state.pattern = pattern.mode;
+  state.direction = pattern.direction;
   state.fps = pattern.speed;
   state.animationStyle = pattern.animationStyle;
   state.previewRunning = true;
@@ -58,35 +66,59 @@ export function downloadProject(patternStore) {
   URL.revokeObjectURL(url);
 }
 
-function isValidPattern(pattern) {
+function normalizePattern(pattern) {
   if (!pattern || typeof pattern !== 'object') {
-    return false;
+    return null;
   }
 
   if (typeof pattern.id !== 'string' || typeof pattern.name !== 'string') {
-    return false;
+    return null;
   }
 
-  if (pattern.gridSize !== 5 || pattern.mode !== 'spinner') {
-    return false;
+  if (pattern.gridSize !== 5) {
+    return null;
   }
 
   if (typeof pattern.speed !== 'number' || !Number.isFinite(pattern.speed)) {
-    return false;
+    return null;
   }
 
   if (pattern.animationStyle !== 'binary' && pattern.animationStyle !== 'fade') {
-    return false;
+    return null;
   }
 
   if (!Array.isArray(pattern.activeCells) || pattern.activeCells.length !== pattern.gridSize) {
-    return false;
+    return null;
   }
 
-  return pattern.activeCells.every(
+  const validGrid = pattern.activeCells.every(
     (row) =>
       Array.isArray(row) &&
       row.length === pattern.gridSize &&
       row.every((cell) => typeof cell === 'boolean')
   );
+
+  if (!validGrid) {
+    return null;
+  }
+
+  const mode = MODES.has(pattern.mode) ? pattern.mode : 'spinner';
+  let direction = pattern.direction ?? null;
+
+  if (mode !== 'directional') {
+    direction = null;
+  } else if (!DIRECTIONS.has(direction)) {
+    direction = 'right';
+  }
+
+  return {
+    id: pattern.id,
+    name: pattern.name,
+    gridSize: pattern.gridSize,
+    activeCells: pattern.activeCells,
+    mode,
+    direction,
+    speed: pattern.speed,
+    animationStyle: pattern.animationStyle
+  };
 }
