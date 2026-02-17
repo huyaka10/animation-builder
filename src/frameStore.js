@@ -101,7 +101,7 @@ export function createInitialState() {
       color: DEFAULT_COLOR
     },
     activeFrameIndex: 0,
-    previewRunning: true,
+    previewRunning: false,
     playbackCurrentIndex: 0,
     playbackPrevIndex: 0,
     playbackBlend: 0,

@@ -301,6 +301,7 @@ function refreshUi() {
   ui.styleSelect.value = state.animation.animationStyle;
   ui.colorInput.value = state.animation.color;
   ui.savePresetChangesBtn.disabled = !state.selectedPresetId;
+  ui.previewToggle.textContent = state.previewRunning ? 'Pause Preview' : 'Start Preview';
   ui.activePresetLabel.textContent = getModeLabel();
 }
 
