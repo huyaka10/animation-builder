@@ -30,6 +30,7 @@ let editingPresetId = null;
 
 const ui = {
   stage: document.querySelector('#stage'),
+  activePresetLabel: document.querySelector('#activePresetLabel'),
   timelineList: document.querySelector('#timelineList'),
   addFrameBtn: document.querySelector('#addFrameBtn'),
   duplicateFrameBtn: document.querySelector('#duplicateFrameBtn'),
@@ -40,6 +41,7 @@ const ui = {
   styleSelect: document.querySelector('#styleSelect'),
   colorInput: document.querySelector('#colorInput'),
   previewToggle: document.querySelector('#previewToggle'),
+  newAnimationBtn: document.querySelector('#newAnimationBtn'),
   capturePatternBtn: document.querySelector('#capturePatternBtn'),
   savePresetChangesBtn: document.querySelector('#savePresetChangesBtn'),
   presetList: document.querySelector('#presetList'),
@@ -155,6 +157,23 @@ function bindControls() {
     ui.previewToggle.textContent = state.previewRunning ? 'Pause Preview' : 'Start Preview';
   });
 
+  ui.newAnimationBtn.addEventListener('click', () => {
+    if (!state.selectedPresetId) {
+      return;
+    }
+
+    const selectedPreset = getSelectedPreset();
+    const hasUnsaved = selectedPreset && !animationsEqual(state.animation, selectedPreset.animation);
+    if (hasUnsaved && !window.confirm('You have unsaved changes. Continue?')) {
+      return;
+    }
+
+    state.selectedPresetId = null;
+    editingPresetId = null;
+    persist();
+    refreshUi();
+  });
+
   ui.capturePatternBtn.addEventListener('click', () => {
     if (!state.selectedPresetId) {
       createNewPresetFromCurrent();
@@ -267,6 +286,18 @@ function refreshUi() {
   ui.styleSelect.value = state.animation.animationStyle;
   ui.colorInput.value = state.animation.color;
   ui.savePresetChangesBtn.disabled = !state.selectedPresetId;
+  ui.activePresetLabel.textContent = getModeLabel();
+}
+
+function getModeLabel() {
+  const preset = getSelectedPreset();
+  if (!preset) {
+    return 'Draft';
+  }
+  if (isPresetModified(preset)) {
+    return `Preset: ${preset.name} *`;
+  }
+  return `Preset: ${preset.name}`;
 }
 
 function refreshPresetList() {

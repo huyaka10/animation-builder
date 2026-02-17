@@ -10,6 +10,7 @@
     <div id="app" class="app-shell">
       <main class="stage-wrap">
         <h1>Animation Builder · Timeline</h1>
+        <div id="activePresetLabel" class="active-preset-label">Draft</div>
         <section class="stage-card">
           <svg id="stage" viewBox="0 0 520 520" aria-label="3 by 3 animation grid"></svg>
         </section>
@@ -52,6 +53,7 @@
         <section class="preset-panel">
           <h3>Presets</h3>
           <div class="preset-actions">
+            <button id="newAnimationBtn" class="btn" type="button">New Animation</button>
             <button id="capturePatternBtn" class="btn" type="button">Capture Pattern</button>
             <button id="savePresetChangesBtn" class="btn btn-primary" type="button">Save Changes</button>
           </div>
