@@ -2,6 +2,8 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 const CELL_SIZE = 90;
 const GAP = 8;
 const CORNER = 9;
+const INACTIVE_CELL_COLOR = '#333843';
+const HOVER_CELL_COLOR = '#5E6677';
 
 export function createRenderer(svg, state, onCellClick) {
   const cells = [];
@@ -17,12 +19,22 @@ export function createRenderer(svg, state, onCellClick) {
       rect.setAttribute('width', String(CELL_SIZE));
       rect.setAttribute('height', String(CELL_SIZE));
       rect.setAttribute('rx', String(CORNER));
-      rect.setAttribute('fill', state.animation.color);
-      rect.setAttribute('fill-opacity', '0');
-      rect.setAttribute('stroke', '#0f1724');
+      rect.setAttribute('fill', INACTIVE_CELL_COLOR);
+      rect.setAttribute('fill-opacity', '1');
+      rect.setAttribute('stroke', '#11151d');
       rect.setAttribute('stroke-width', '1');
       rect.style.cursor = 'pointer';
       rect.addEventListener('click', () => onCellClick(row, col));
+      rect.addEventListener('mouseenter', () => {
+        if (Number(rect.dataset.active || '0') === 0) {
+          rect.setAttribute('fill', HOVER_CELL_COLOR);
+        }
+      });
+      rect.addEventListener('mouseleave', () => {
+        if (Number(rect.dataset.active || '0') === 0) {
+          rect.setAttribute('fill', INACTIVE_CELL_COLOR);
+        }
+      });
       svg.appendChild(rect);
       rowCells.push(rect);
     }
@@ -35,8 +47,15 @@ export function createRenderer(svg, state, onCellClick) {
         for (let col = 0; col < state.gridSize; col += 1) {
           const rect = cells[row][col];
           const opacity = Number(displayFrame[row][col] ?? 0);
-          rect.setAttribute('fill', state.animation.color);
-          rect.setAttribute('fill-opacity', String(opacity));
+          if (opacity <= 0) {
+            rect.dataset.active = '0';
+            rect.setAttribute('fill', INACTIVE_CELL_COLOR);
+            rect.setAttribute('fill-opacity', '1');
+          } else {
+            rect.dataset.active = '1';
+            rect.setAttribute('fill', state.animation.color);
+            rect.setAttribute('fill-opacity', String(opacity));
+          }
         }
       }
     }
