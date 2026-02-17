@@ -166,6 +166,51 @@ function createCreatingPreset() {
   };
 }
 
+
+function createPostingPreset() {
+  return {
+    id: 'default-posting',
+    name: 'Posting',
+    animation: {
+      frames: [
+        [
+          [0, 0, 0],
+          [0, 1, 0],
+          [0, 0, 0]
+        ],
+        [
+          [0, 1, 0],
+          [1, 1, 1],
+          [0, 1, 0]
+        ],
+        [
+          [1, 1, 1],
+          [1, 1, 1],
+          [1, 1, 1]
+        ],
+        [
+          [0, 1, 0],
+          [1, 1, 1],
+          [0, 1, 0]
+        ],
+        [
+          [0, 0, 0],
+          [0, 1, 0],
+          [0, 0, 0]
+        ],
+        [
+          [0, 0, 0],
+          [0, 0, 0],
+          [0, 0, 0]
+        ]
+      ],
+      fps: 4,
+      animationStyle: 'Fade',
+      color: '#33FFA7'
+    }
+  };
+}
+
 export function createInitialState() {
   return {
     gridSize: GRID_SIZE,
@@ -181,7 +226,7 @@ export function createInitialState() {
     playbackPrevIndex: 0,
     playbackBlend: 0,
     playbackAccumulatorMs: 0,
-    presets: [createAnalyzingPreset(), createThinkingPreset(), createCreatingPreset()],
+    presets: [createAnalyzingPreset(), createThinkingPreset(), createCreatingPreset(), createPostingPreset()],
     selectedPresetId: null
   };
 }
