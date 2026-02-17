@@ -20,7 +20,12 @@ export function loadProject() {
     }
 
     const presets = normalizePresets(parsed?.presets);
-    return { animation, presets };
+    const selectedPresetId =
+      typeof parsed?.selectedPresetId === 'string' && presets.some((preset) => preset.id === parsed.selectedPresetId)
+        ? parsed.selectedPresetId
+        : null;
+
+    return { animation, presets, selectedPresetId };
   } catch {
     return null;
   }

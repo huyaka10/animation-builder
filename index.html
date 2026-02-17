@@ -51,7 +51,10 @@
 
         <section class="preset-panel">
           <h3>Presets</h3>
-          <button id="capturePatternBtn" class="btn" type="button">Capture Pattern</button>
+          <div class="preset-actions">
+            <button id="capturePatternBtn" class="btn" type="button">Capture Pattern</button>
+            <button id="savePresetChangesBtn" class="btn btn-primary" type="button">Save Changes</button>
+          </div>
           <ul id="presetList" class="preset-list" aria-label="Saved presets"></ul>
         </section>
 
@@ -63,6 +66,16 @@
         <pre id="exportOutput" class="output" aria-live="polite"></pre>
       </aside>
     </div>
+
+    <dialog id="captureModal" class="capture-modal">
+      <h3>Preset action</h3>
+      <p>Overwrite current preset or create new?</p>
+      <div class="capture-modal-actions">
+        <button id="overwritePresetBtn" class="btn btn-primary" type="button">Overwrite current</button>
+        <button id="createNewPresetBtn" class="btn" type="button">Create new</button>
+        <button id="cancelPresetBtn" class="btn" type="button">Cancel</button>
+      </div>
+    </dialog>
 
     <script type="module" src="src/main.js"></script>
   </body>

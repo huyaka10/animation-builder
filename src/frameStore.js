@@ -18,6 +18,40 @@ export function cloneAnimation(animation) {
   };
 }
 
+export function animationsEqual(a, b) {
+  if (!a || !b) {
+    return false;
+  }
+  if (a.fps !== b.fps || a.animationStyle !== b.animationStyle || a.color !== b.color) {
+    return false;
+  }
+  if (a.frames.length !== b.frames.length) {
+    return false;
+  }
+
+  for (let row = 0; row < a.frames.length; row += 1) {
+    const frameA = a.frames[row];
+    const frameB = b.frames[row];
+    if (frameA.length !== frameB.length) {
+      return false;
+    }
+
+    for (let col = 0; col < frameA.length; col += 1) {
+      if (frameA[col].length !== frameB[col].length) {
+        return false;
+      }
+
+      for (let cell = 0; cell < frameA[col].length; cell += 1) {
+        if (frameA[col][cell] !== frameB[col][cell]) {
+          return false;
+        }
+      }
+    }
+  }
+
+  return true;
+}
+
 export function createInitialState() {
   return {
     gridSize: GRID_SIZE,
@@ -33,7 +67,8 @@ export function createInitialState() {
     playbackPrevIndex: 0,
     playbackBlend: 0,
     playbackAccumulatorMs: 0,
-    presets: []
+    presets: [],
+    selectedPresetId: null
   };
 }
 

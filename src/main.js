@@ -1,5 +1,6 @@
 import {
   addFrameAfterActive,
+  animationsEqual,
   cloneAnimation,
   createInitialState,
   createPresetFromAnimation,
@@ -20,10 +21,12 @@ const persisted = loadProject();
 if (persisted) {
   state.animation = persisted.animation;
   state.presets = persisted.presets;
+  state.selectedPresetId = persisted.selectedPresetId;
 }
 resetPlayback(state);
 
 let draggedFrameIndex = null;
+let editingPresetId = null;
 
 const ui = {
   stage: document.querySelector('#stage'),
@@ -38,17 +41,23 @@ const ui = {
   colorInput: document.querySelector('#colorInput'),
   previewToggle: document.querySelector('#previewToggle'),
   capturePatternBtn: document.querySelector('#capturePatternBtn'),
+  savePresetChangesBtn: document.querySelector('#savePresetChangesBtn'),
   presetList: document.querySelector('#presetList'),
   exportJsonBtn: document.querySelector('#exportJsonBtn'),
   importJsonBtn: document.querySelector('#importJsonBtn'),
   importJsonInput: document.querySelector('#importJsonInput'),
   exportSvgBtn: document.querySelector('#exportSvgBtn'),
-  exportOutput: document.querySelector('#exportOutput')
+  exportOutput: document.querySelector('#exportOutput'),
+  captureModal: document.querySelector('#captureModal'),
+  overwritePresetBtn: document.querySelector('#overwritePresetBtn'),
+  createNewPresetBtn: document.querySelector('#createNewPresetBtn'),
+  cancelPresetBtn: document.querySelector('#cancelPresetBtn')
 };
 
 const renderer = createRenderer(ui.stage, state, (row, col) => {
   toggleCellInActiveFrame(state, row, col);
   persist();
+  refreshUi();
 });
 
 bindControls();
@@ -126,16 +135,19 @@ function bindControls() {
     state.animation.fps = Number(event.target.value);
     ui.fpsValue.textContent = String(state.animation.fps);
     persist();
+    refreshUi();
   });
 
   ui.styleSelect.addEventListener('change', (event) => {
     state.animation.animationStyle = event.target.value;
     persist();
+    refreshUi();
   });
 
   ui.colorInput.addEventListener('input', (event) => {
     state.animation.color = event.target.value;
     persist();
+    refreshUi();
   });
 
   ui.previewToggle.addEventListener('click', () => {
@@ -144,10 +156,29 @@ function bindControls() {
   });
 
   ui.capturePatternBtn.addEventListener('click', () => {
-    const preset = createPresetFromAnimation(state.animation, state.presets.length);
-    state.presets.push(preset);
-    persist();
-    refreshPresetList();
+    if (!state.selectedPresetId) {
+      createNewPresetFromCurrent();
+      return;
+    }
+    ui.captureModal.showModal();
+  });
+
+  ui.savePresetChangesBtn.addEventListener('click', () => {
+    saveSelectedPresetChanges();
+  });
+
+  ui.overwritePresetBtn.addEventListener('click', () => {
+    saveSelectedPresetChanges();
+    ui.captureModal.close();
+  });
+
+  ui.createNewPresetBtn.addEventListener('click', () => {
+    createNewPresetFromCurrent();
+    ui.captureModal.close();
+  });
+
+  ui.cancelPresetBtn.addEventListener('click', () => {
+    ui.captureModal.close();
   });
 
   ui.exportJsonBtn.addEventListener('click', () => {
@@ -182,6 +213,51 @@ function bindControls() {
   });
 }
 
+function saveSelectedPresetChanges() {
+  const preset = getSelectedPreset();
+  if (!preset) {
+    return;
+  }
+  preset.animation = cloneAnimation(state.animation);
+  persist();
+  refreshUi();
+}
+
+function createNewPresetFromCurrent() {
+  const preset = createPresetFromAnimation(state.animation, state.presets.length);
+  state.presets.push(preset);
+  state.selectedPresetId = preset.id;
+  editingPresetId = null;
+  persist();
+  refreshUi();
+}
+
+function selectPreset(presetId) {
+  const preset = state.presets.find((entry) => entry.id === presetId);
+  if (!preset) {
+    return;
+  }
+
+  state.selectedPresetId = preset.id;
+  state.animation = cloneAnimation(preset.animation);
+  state.activeFrameIndex = 0;
+  resetPlayback(state);
+  persist();
+  refreshUi();
+}
+
+function removePreset(presetId) {
+  state.presets = state.presets.filter((preset) => preset.id !== presetId);
+  if (state.selectedPresetId === presetId) {
+    state.selectedPresetId = null;
+  }
+  if (editingPresetId === presetId) {
+    editingPresetId = null;
+  }
+  persist();
+  refreshUi();
+}
+
 function refreshUi() {
   renderTimeline(state, ui);
   refreshPresetList();
@@ -190,6 +266,7 @@ function refreshUi() {
   ui.fpsValue.textContent = String(state.animation.fps);
   ui.styleSelect.value = state.animation.animationStyle;
   ui.colorInput.value = state.animation.color;
+  ui.savePresetChangesBtn.disabled = !state.selectedPresetId;
 }
 
 function refreshPresetList() {
@@ -204,21 +281,138 @@ function refreshPresetList() {
 
   state.presets.forEach((preset) => {
     const item = document.createElement('li');
-    const button = document.createElement('button');
-    button.className = 'btn preset-item';
-    button.textContent = preset.name;
-    button.addEventListener('click', () => {
-      state.animation = cloneAnimation(preset.animation);
-      state.activeFrameIndex = 0;
-      resetPlayback(state);
-      persist();
+    item.className = `preset-card${preset.id === state.selectedPresetId ? ' active' : ''}`;
+
+    const header = document.createElement('div');
+    header.className = 'preset-card-head';
+
+    const nameWrap = document.createElement('div');
+    nameWrap.className = 'preset-name-wrap';
+
+    if (editingPresetId === preset.id) {
+      const input = document.createElement('input');
+      input.className = 'preset-rename-input';
+      input.value = preset.name;
+      input.autofocus = true;
+
+      const commitRename = () => {
+        const nextName = input.value.trim();
+        if (nextName) {
+          preset.name = nextName;
+          persist();
+        }
+        editingPresetId = null;
+        refreshUi();
+      };
+
+      input.addEventListener('blur', commitRename);
+      input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          input.blur();
+        }
+        if (event.key === 'Escape') {
+          editingPresetId = null;
+          refreshUi();
+        }
+      });
+
+      nameWrap.appendChild(input);
+      setTimeout(() => input.select(), 0);
+    } else {
+      const name = document.createElement('button');
+      name.className = 'preset-name-button';
+      name.type = 'button';
+      name.textContent = preset.name;
+      name.addEventListener('click', () => selectPreset(preset.id));
+
+      nameWrap.appendChild(name);
+
+      if (isPresetModified(preset)) {
+        const marker = document.createElement('span');
+        marker.className = 'preset-modified';
+        marker.textContent = '*';
+        marker.title = 'Modified (unsaved)';
+        nameWrap.appendChild(marker);
+      }
+    }
+
+    const controls = document.createElement('div');
+    controls.className = 'preset-controls';
+
+    const renameBtn = document.createElement('button');
+    renameBtn.className = 'btn preset-control-btn';
+    renameBtn.type = 'button';
+    renameBtn.textContent = 'Rename';
+    renameBtn.disabled = editingPresetId === preset.id;
+    renameBtn.addEventListener('click', () => {
+      editingPresetId = preset.id;
       refreshUi();
     });
-    item.appendChild(button);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn btn-danger preset-control-btn';
+    deleteBtn.type = 'button';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.addEventListener('click', () => removePreset(preset.id));
+
+    controls.appendChild(renameBtn);
+    controls.appendChild(deleteBtn);
+
+    header.appendChild(nameWrap);
+    header.appendChild(controls);
+
+    item.appendChild(header);
+    item.appendChild(createPresetPreview(preset));
+
     ui.presetList.appendChild(item);
   });
 }
 
+function createPresetPreview(preset) {
+  const svgNs = 'http://www.w3.org/2000/svg';
+  const preview = document.createElementNS(svgNs, 'svg');
+  const size = 12;
+  const gap = 3;
+  const padding = 2;
+  const frame = preset.animation.frames[0];
+  const grid = frame.length;
+  const width = grid * size + (grid - 1) * gap + padding * 2;
+
+  preview.setAttribute('class', 'preset-preview');
+  preview.setAttribute('viewBox', `0 0 ${width} ${width}`);
+
+  for (let row = 0; row < grid; row += 1) {
+    for (let col = 0; col < grid; col += 1) {
+      const rect = document.createElementNS(svgNs, 'rect');
+      rect.setAttribute('x', String(padding + col * (size + gap)));
+      rect.setAttribute('y', String(padding + row * (size + gap)));
+      rect.setAttribute('width', String(size));
+      rect.setAttribute('height', String(size));
+      rect.setAttribute('rx', '2');
+      rect.setAttribute('fill', preset.animation.color);
+      rect.setAttribute('fill-opacity', frame[row][col] ? '1' : '0.12');
+      preview.appendChild(rect);
+    }
+  }
+
+  return preview;
+}
+
+function getSelectedPreset() {
+  if (!state.selectedPresetId) {
+    return null;
+  }
+  return state.presets.find((preset) => preset.id === state.selectedPresetId) ?? null;
+}
+
+function isPresetModified(preset) {
+  return preset.id === state.selectedPresetId && !animationsEqual(state.animation, preset.animation);
+}
+
 function persist() {
-  saveProject({ animation: state.animation, presets: state.presets });
+  saveProject({
+    animation: state.animation,
+    presets: state.presets,
+    selectedPresetId: state.selectedPresetId
+  });
 }
