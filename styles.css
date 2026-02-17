@@ -3,7 +3,6 @@
   --bg: #090f1f;
   --panel: #111a2d;
   --panel-border: #22304a;
-  --stage: #050c1b;
   --text: #dbe9ff;
   --muted: #8ea4c7;
   --btn: #212d43;
@@ -15,18 +14,24 @@
   box-sizing: border-box;
 }
 
+html,
 body {
   margin: 0;
-  min-height: 100vh;
+  height: 100%;
+}
+
+body {
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   color: var(--text);
   background: radial-gradient(circle at 30% 20%, #0b1730 0%, var(--bg) 42%, #070d19 100%);
+  overflow: hidden;
 }
 
 .app-shell {
-  min-height: 100vh;
+  height: 100vh;
   display: grid;
-  grid-template-columns: 1fr 420px;
+  grid-template-columns: 1fr 360px;
+  overflow: hidden;
 }
 
 .stage-wrap {
@@ -34,8 +39,10 @@ body {
   grid-template-rows: auto auto 1fr auto;
   justify-items: center;
   align-items: start;
-  padding: 24px 28px 20px;
-  gap: 24px;
+  padding: 14px 18px 12px;
+  gap: 12px;
+  min-height: 0;
+  overflow: hidden;
 }
 
 h1,
@@ -46,16 +53,16 @@ h3 {
 
 h1 {
   margin-top: 2px;
-  font-size: 2rem;
+  font-size: 1.1rem;
   font-weight: 650;
   letter-spacing: 0.02em;
   color: #e8f0ff;
 }
 
 .active-preset-label {
-  font-size: 1.45rem;
+  font-size: 1rem;
   color: #9dc4ff;
-  padding: 8px 20px;
+  padding: 4px 12px;
   border: 1px solid #31558f;
   border-radius: 999px;
   background: #10213f;
@@ -63,14 +70,14 @@ h1 {
 }
 
 .stage-card {
-  width: min(66vmin, 980px);
+  width: min(56vmin, 560px);
   aspect-ratio: 1;
-  border-radius: 20px;
-  background: var(--stage);
-  border: 1px solid #142642;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
   display: grid;
   place-items: center;
-  padding: 26px;
+  padding: 0;
 }
 
 #stage {
@@ -80,13 +87,13 @@ h1 {
 }
 
 .timeline-panel {
-  width: min(85vw, 1020px);
+  width: min(85vw, 760px);
   border: 1px solid #324562;
-  border-radius: 14px;
-  padding: 10px;
+  border-radius: 12px;
+  padding: 8px;
   background: #121f34;
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .timeline-actions {
@@ -105,7 +112,7 @@ h1 {
 }
 
 .timeline-item {
-  min-width: 140px;
+  min-width: 92px;
   border: 1px solid #2f425f;
   border-radius: 10px;
   padding: 8px;
@@ -121,35 +128,37 @@ h1 {
 
 .timeline-preview {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   letter-spacing: 0.03em;
   color: #c9dcff;
-  min-height: 24px;
+  min-height: 20px;
 }
 
 .timeline-label {
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   color: #cfe0ff;
 }
 
 .panel {
   border-left: 1px solid var(--panel-border);
   background: linear-gradient(180deg, #121d31 0%, var(--panel) 100%);
-  padding: 22px 24px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .panel > h2 {
-  font-size: 2.8rem;
-  margin-bottom: 4px;
+  font-size: 2rem;
+  margin-bottom: 2px;
 }
 
 .field {
   display: grid;
-  gap: 8px;
-  font-size: 1.35rem;
+  gap: 6px;
+  font-size: 0.95rem;
 }
 
 .field span {
@@ -161,11 +170,11 @@ input,
 button {
   width: 100%;
   border: 1px solid var(--btn-border);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--btn);
   color: var(--text);
-  padding: 11px 14px;
-  font-size: 1.3rem;
+  padding: 9px 10px;
+  font-size: 0.95rem;
 }
 
 input[type='range'] {
@@ -174,8 +183,8 @@ input[type='range'] {
 }
 
 input[type='color'] {
-  padding: 3px;
-  height: 48px;
+  padding: 2px;
+  height: 40px;
   cursor: pointer;
 }
 
@@ -201,27 +210,27 @@ input[type='color'] {
 
 .output {
   margin: 4px 0 0;
-  min-height: 170px;
-  max-height: 260px;
+  min-height: 120px;
+  max-height: 180px;
   overflow: auto;
   background: #0f182b;
   border: 1px solid #2f4361;
-  border-radius: 12px;
-  padding: 12px;
+  border-radius: 10px;
+  padding: 10px;
   color: #b7d2ff;
-  font-size: 1.05rem;
+  font-size: 0.82rem;
 }
 
 .preset-panel {
   border-top: 1px solid #2f415d;
   margin-top: 2px;
-  padding-top: 10px;
+  padding-top: 8px;
   display: grid;
   gap: 8px;
 }
 
 .preset-panel h3 {
-  font-size: 2.2rem;
+  font-size: 1.8rem;
 }
 
 .preset-actions {
@@ -235,13 +244,13 @@ input[type='color'] {
   list-style: none;
   display: grid;
   gap: 8px;
-  max-height: 280px;
+  max-height: 220px;
   overflow: auto;
 }
 
 .preset-card {
   border: 1px solid #3a4f71;
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 8px;
   background: #1e3150;
   display: grid;
@@ -276,7 +285,7 @@ input[type='color'] {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 1.15rem;
+  font-size: 0.92rem;
 }
 
 .preset-name-button:hover {
@@ -295,21 +304,21 @@ input[type='color'] {
 
 .preset-control-btn {
   width: auto;
-  padding: 4px 8px;
-  font-size: 0.9rem;
+  padding: 3px 8px;
+  font-size: 0.75rem;
   border-radius: 8px;
 }
 
 .preset-rename-input {
   padding: 6px 8px;
-  font-size: 1rem;
+  font-size: 0.84rem;
 }
 
 .preset-preview {
-  width: 92px;
-  height: 92px;
+  width: 78px;
+  height: 78px;
   border: 1px solid #2f4564;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #10182a;
 }
 
@@ -335,39 +344,24 @@ input[type='color'] {
   display: none;
 }
 
-@media (max-width: 1280px) {
-  .app-shell {
-    grid-template-columns: 1fr 360px;
-  }
-
-  .panel > h2,
-  .preset-panel h3 {
-    font-size: 2rem;
-  }
-
-  h1 {
-    font-size: 1.35rem;
-  }
-
-  .active-preset-label {
-    font-size: 1rem;
-  }
-
-  select,
-  input,
-  button,
-  .field {
-    font-size: 1rem;
-  }
-}
-
 @media (max-width: 960px) {
+  body {
+    overflow: auto;
+  }
+
   .app-shell {
+    height: auto;
+    min-height: 100vh;
     grid-template-columns: 1fr;
+  }
+
+  .stage-wrap {
+    overflow: visible;
   }
 
   .panel {
     border-left: 0;
     border-top: 1px solid var(--panel-border);
+    overflow: visible;
   }
 }
