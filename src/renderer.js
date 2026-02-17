@@ -26,7 +26,7 @@ export function createRenderer(svg, state, onCellClick) {
       rect.style.cursor = 'pointer';
       rect.addEventListener('click', () => onCellClick(row, col));
       rect.addEventListener('mouseenter', () => {
-        if (Number(rect.dataset.active || '0') === 0) {
+        if (!state.previewRunning && Number(rect.dataset.active || '0') === 0) {
           rect.setAttribute('fill', HOVER_CELL_COLOR);
         }
       });
@@ -50,7 +50,7 @@ export function createRenderer(svg, state, onCellClick) {
           if (opacity <= 0) {
             rect.dataset.active = '0';
             rect.setAttribute('fill', INACTIVE_CELL_COLOR);
-            rect.setAttribute('fill-opacity', '1');
+            rect.setAttribute('fill-opacity', state.previewRunning ? '0' : '1');
           } else {
             rect.dataset.active = '1';
             rect.setAttribute('fill', state.animation.color);
