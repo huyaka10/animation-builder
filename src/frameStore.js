@@ -51,6 +51,46 @@ export function animationsEqual(a, b) {
   return true;
 }
 
+
+function createAnalyzingPreset() {
+  return {
+    id: 'default-analyzing',
+    name: 'Analyzing',
+    animation: {
+      frames: [
+        [
+          [0, 0, 0],
+          [1, 0, 0],
+          [0, 0, 0]
+        ],
+        [
+          [1, 0, 0],
+          [0, 1, 0],
+          [1, 0, 0]
+        ],
+        [
+          [0, 1, 0],
+          [1, 0, 1],
+          [0, 1, 0]
+        ],
+        [
+          [0, 0, 1],
+          [0, 1, 0],
+          [0, 0, 1]
+        ],
+        [
+          [0, 0, 0],
+          [0, 0, 1],
+          [0, 0, 0]
+        ]
+      ],
+      fps: 4,
+      animationStyle: 'Fade',
+      color: '#FF8433'
+    }
+  };
+}
+
 export function createInitialState() {
   return {
     gridSize: GRID_SIZE,
@@ -66,7 +106,7 @@ export function createInitialState() {
     playbackPrevIndex: 0,
     playbackBlend: 0,
     playbackAccumulatorMs: 0,
-    presets: [],
+    presets: [createAnalyzingPreset()],
     selectedPresetId: null
   };
 }

@@ -21,7 +21,9 @@ const persisted = loadProject();
 if (persisted?.animation) {
   state.animation = persisted.animation;
 }
-state.presets = persisted?.presets ?? [];
+if (persisted?.presets) {
+  state.presets = persisted.presets;
+}
 state.selectedPresetId = persisted?.selectedPresetId ?? null;
 resetPlayback(state);
 

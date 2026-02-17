@@ -25,7 +25,7 @@ export function loadProject() {
   try {
     const raw = localStorage.getItem(PROJECT_STORAGE_KEY);
     if (!raw) {
-      return { presets: [] };
+      return null;
     }
 
     const parsed = JSON.parse(raw);
@@ -42,6 +42,6 @@ export function loadProject() {
 
     return { animation, presets, selectedPresetId };
   } catch {
-    return { presets: [] };
+    return null;
   }
 }
