@@ -91,6 +91,41 @@ function createAnalyzingPreset() {
   };
 }
 
+
+function createThinkingPreset() {
+  return {
+    id: 'default-thinking',
+    name: 'Thinking',
+    animation: {
+      frames: [
+        [
+          [1, 0, 0],
+          [0, 1, 0],
+          [0, 0, 1]
+        ],
+        [
+          [0, 1, 0],
+          [1, 0, 1],
+          [0, 0, 0]
+        ],
+        [
+          [0, 0, 1],
+          [0, 1, 0],
+          [1, 0, 0]
+        ],
+        [
+          [0, 0, 0],
+          [1, 0, 1],
+          [0, 1, 0]
+        ]
+      ],
+      fps: 4,
+      animationStyle: 'Fade',
+      color: '#6771FC'
+    }
+  };
+}
+
 export function createInitialState() {
   return {
     gridSize: GRID_SIZE,
@@ -106,7 +141,7 @@ export function createInitialState() {
     playbackPrevIndex: 0,
     playbackBlend: 0,
     playbackAccumulatorMs: 0,
-    presets: [createAnalyzingPreset()],
+    presets: [createAnalyzingPreset(), createThinkingPreset()],
     selectedPresetId: null
   };
 }
