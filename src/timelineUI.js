@@ -1,0 +1,1 @@
+export function renderTimeline(state, elements) { const { timelineList } = elements; timelineList.innerHTML=''; state.animation.frames.forEach((frame, index)=>{ const item=document.createElement('li'); item.className='timeline-item'; item.dataset.index=String(index); item.textContent=`F${index+1} ${frame.flat().join('')}`; timelineList.appendChild(item); }); }
