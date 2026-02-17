@@ -56,8 +56,11 @@
             <button id="newAnimationBtn" class="btn" type="button">New Animation</button>
             <button id="capturePatternBtn" class="btn" type="button">Capture Pattern</button>
             <button id="savePresetChangesBtn" class="btn btn-primary" type="button">Save Changes</button>
+            <button id="presetToggleBtn" class="btn" type="button">Show Presets</button>
           </div>
-          <ul id="presetList" class="preset-list" aria-label="Saved presets"></ul>
+          <div id="presetListWrap" class="preset-list-wrap hidden">
+            <ul id="presetList" class="preset-list" aria-label="Saved presets"></ul>
+          </div>
         </section>
 
         <button id="exportJsonBtn" class="btn btn-primary">Export JSON</button>

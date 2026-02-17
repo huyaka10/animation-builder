@@ -27,6 +27,7 @@ resetPlayback(state);
 
 let draggedFrameIndex = null;
 let editingPresetId = null;
+let presetsExpanded = false;
 
 const ui = {
   stage: document.querySelector('#stage'),
@@ -44,6 +45,8 @@ const ui = {
   newAnimationBtn: document.querySelector('#newAnimationBtn'),
   capturePatternBtn: document.querySelector('#capturePatternBtn'),
   savePresetChangesBtn: document.querySelector('#savePresetChangesBtn'),
+  presetToggleBtn: document.querySelector('#presetToggleBtn'),
+  presetListWrap: document.querySelector('#presetListWrap'),
   presetList: document.querySelector('#presetList'),
   exportJsonBtn: document.querySelector('#exportJsonBtn'),
   importJsonBtn: document.querySelector('#importJsonBtn'),
@@ -186,6 +189,14 @@ function bindControls() {
     saveSelectedPresetChanges();
   });
 
+  ui.presetToggleBtn.addEventListener('click', () => {
+    if (state.presets.length === 0) {
+      return;
+    }
+    presetsExpanded = !presetsExpanded;
+    refreshPresetVisibility();
+  });
+
   ui.overwritePresetBtn.addEventListener('click', () => {
     saveSelectedPresetChanges();
     ui.captureModal.close();
@@ -280,6 +291,8 @@ function removePreset(presetId) {
 function refreshUi() {
   renderTimeline(state, ui);
   refreshPresetList();
+  refreshPresetVisibility();
+
   ui.frameInfo.textContent = `Frame ${state.activeFrameIndex + 1} / ${state.animation.frames.length}`;
   ui.fpsSlider.value = String(state.animation.fps);
   ui.fpsValue.textContent = String(state.animation.fps);
@@ -287,6 +300,22 @@ function refreshUi() {
   ui.colorInput.value = state.animation.color;
   ui.savePresetChangesBtn.disabled = !state.selectedPresetId;
   ui.activePresetLabel.textContent = getModeLabel();
+}
+
+function refreshPresetVisibility() {
+  const count = state.presets.length;
+
+  if (count === 0) {
+    presetsExpanded = false;
+    ui.presetToggleBtn.disabled = true;
+    ui.presetToggleBtn.textContent = 'Show Presets (0)';
+    ui.presetListWrap.classList.add('hidden');
+    return;
+  }
+
+  ui.presetToggleBtn.disabled = false;
+  ui.presetToggleBtn.textContent = `${presetsExpanded ? 'Hide' : 'Show'} Presets (${count})`;
+  ui.presetListWrap.classList.toggle('hidden', !presetsExpanded);
 }
 
 function getModeLabel() {

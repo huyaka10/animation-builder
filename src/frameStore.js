@@ -29,20 +29,19 @@ export function animationsEqual(a, b) {
     return false;
   }
 
-  for (let row = 0; row < a.frames.length; row += 1) {
-    const frameA = a.frames[row];
-    const frameB = b.frames[row];
+  for (let frameIndex = 0; frameIndex < a.frames.length; frameIndex += 1) {
+    const frameA = a.frames[frameIndex];
+    const frameB = b.frames[frameIndex];
     if (frameA.length !== frameB.length) {
       return false;
     }
 
-    for (let col = 0; col < frameA.length; col += 1) {
-      if (frameA[col].length !== frameB[col].length) {
+    for (let row = 0; row < frameA.length; row += 1) {
+      if (frameA[row].length !== frameB[row].length) {
         return false;
       }
-
-      for (let cell = 0; cell < frameA[col].length; cell += 1) {
-        if (frameA[col][cell] !== frameB[col][cell]) {
+      for (let col = 0; col < frameA[row].length; col += 1) {
+        if (frameA[row][col] !== frameB[row][col]) {
           return false;
         }
       }
@@ -67,7 +66,7 @@ export function createInitialState() {
     playbackPrevIndex: 0,
     playbackBlend: 0,
     playbackAccumulatorMs: 0,
-    presets: [],
+    presets: createDefaultPresets(),
     selectedPresetId: null
   };
 }
@@ -192,6 +191,74 @@ export function normalizePresets(rawPresets) {
       return { id: preset.id, name: preset.name, animation };
     })
     .filter(Boolean);
+}
+
+function createDefaultPresets() {
+  const style = 'Binary';
+  const palette = ['#5ca7ff', '#62d4a8', '#ff9e64', '#ff6b9a', '#d49cff'];
+  const patterns = [
+    [
+      [1, 0, 1],
+      [0, 1, 0],
+      [1, 0, 1]
+    ],
+    [
+      [1, 1, 1],
+      [0, 0, 0],
+      [1, 1, 1]
+    ],
+    [
+      [1, 0, 0],
+      [0, 1, 0],
+      [0, 0, 1]
+    ],
+    [
+      [0, 0, 1],
+      [0, 1, 0],
+      [1, 0, 0]
+    ],
+    [
+      [0, 1, 0],
+      [1, 1, 1],
+      [0, 1, 0]
+    ],
+    [
+      [1, 1, 0],
+      [1, 0, 0],
+      [0, 0, 0]
+    ],
+    [
+      [0, 0, 0],
+      [0, 0, 1],
+      [0, 1, 1]
+    ],
+    [
+      [1, 0, 1],
+      [1, 0, 1],
+      [1, 0, 1]
+    ],
+    [
+      [0, 1, 0],
+      [0, 1, 0],
+      [0, 1, 0]
+    ],
+    [
+      [1, 1, 1],
+      [1, 0, 1],
+      [1, 1, 1]
+    ]
+  ];
+
+  return patterns.map((frame, index) => ({
+    id: `default-preset-${index + 1}`,
+    name: `Pattern ${index + 1}`,
+    animation: {
+      frames: [cloneFrame(frame)],
+      fps: 12 + (index % 4) * 3,
+      animationStyle: style,
+      color: palette[index % palette.length]
+    }
+  }));
 }
 
 function normalizeFrame(frame, gridSize) {
