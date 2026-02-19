@@ -1,7 +1,7 @@
 :root {
   color-scheme: light;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-  background: #ececec;
+  background: #ffffff;
   color: #1f2937;
 }
 
@@ -11,8 +11,13 @@
 
 body {
   margin: 0;
-  background: #ececec;
+  background: #ffffff;
   padding-bottom: 6rem;
+}
+
+html,
+body {
+  overflow-y: hidden;
 }
 
 .app-shell {
@@ -104,7 +109,7 @@ body {
   width: 170px;
   display: flex;
   justify-content: flex-end;
-  padding-right: 0.35rem;
+  padding-right: 0;
   z-index: 30;
 }
 
