@@ -117,10 +117,10 @@
               setIsOpen((current) => !current);
             }
           },
-          'aria-expanded': isOpen
+          'aria-expanded': isOpen,
+          'aria-label': 'Toggle settings panel'
         },
-        h('span', null, 'Settings'),
-        h('span', { className: `chevron ${isOpen ? 'is-open' : ''}`, 'aria-hidden': 'true' }, '⌃')
+        h('span', { className: 'panel-grip', 'aria-hidden': 'true' })
       ),
       h(
         'div',
