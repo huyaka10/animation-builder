@@ -136,17 +136,17 @@ body {
   gap: 8px;
   cursor: pointer;
   width: 100%;
-  height: calc(24px + (var(--wave-strength, 0) * 24px));
-  min-height: calc(24px + (var(--wave-strength, 0) * 24px));
+  height: calc(22px + (var(--wave-strength, 0) * 26px));
+  min-height: calc(22px + (var(--wave-strength, 0) * 26px));
   overflow: visible;
   transition: height 210ms ease, min-height 210ms ease;
 }
 
 .timeline-segment-line {
-  --base-width: 44px;
-  --wave-width-boost: calc(var(--wave-strength, 0) * 40px);
-  --base-height: 4px;
-  --wave-height-boost: calc(var(--wave-strength, 0) * 24px);
+  --base-width: 20px;
+  --wave-width-boost: calc(var(--wave-strength, 0) * 34px);
+  --base-height: 2px;
+  --wave-height-boost: calc(var(--wave-strength, 0) * 26px);
   width: calc(var(--base-width) + var(--wave-width-boost));
   height: calc(var(--base-height) + var(--wave-height-boost));
   border-radius: 0;

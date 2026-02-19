@@ -63,13 +63,7 @@
               opacity: 1
             }
           },
-          h('img', { src: activeVersion.image, alt: `${activeVersion.title} screenshot` }),
-          h(
-            'div',
-            { className: 'preview-meta' },
-            h('h2', null, activeVersion.title),
-            h('p', null, new Date(activeVersion.date).toLocaleDateString())
-          )
+          h('img', { src: activeVersion.image, alt: `${activeVersion.title} screenshot` })
         )
       )
     );
@@ -82,9 +76,11 @@
       if (hoveredIndex === null) return 0;
       const distance = Math.abs(hoveredIndex - index);
       if (distance === 0) return 1;
-      if (distance === 1) return 0.55;
-      if (distance === 2) return 0.28;
-      if (distance === 3) return 0.12;
+      if (distance === 1) return 0.72;
+      if (distance === 2) return 0.52;
+      if (distance === 3) return 0.34;
+      if (distance === 4) return 0.2;
+      if (distance === 5) return 0.1;
       return 0;
     };
 
