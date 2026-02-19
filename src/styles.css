@@ -41,7 +41,7 @@ body {
   width: min(980px, 94%);
   height: min(64vh, 680px);
   position: relative;
-  perspective: 1600px;
+  perspective: 1200px;
   transform-style: preserve-3d;
 }
 
@@ -50,12 +50,12 @@ body {
   inset: 0;
   border-radius: 16px;
   overflow: hidden;
-  transition: transform 470ms ease, opacity 470ms ease, filter 470ms ease;
+  transition: transform 500ms ease, opacity 400ms ease;
   border: 1px solid rgba(15, 23, 42, 0.15);
   box-shadow: 0 20px 48px rgba(15, 23, 42, 0.18);
   background: #c9c9c9;
   transform-origin: center center;
-  will-change: transform, opacity, filter;
+  will-change: transform, opacity;
 }
 
 .preview-card img {
@@ -70,7 +70,7 @@ body {
 
 .preview-card.is-active {
   z-index: 20;
-  transform: translate3d(0, 0, 0) scale(1);
+  transform: translateZ(0) scale(1);
 }
 
 .preview-meta {

@@ -12,7 +12,10 @@
       );
     }
 
-    const previous = versions.slice(Math.max(0, activeIndex - 5), activeIndex);
+    const previousStart = Math.max(0, activeIndex - 5);
+    const previousVersions = versions
+      .map((version, versionIndex) => ({ version, versionIndex }))
+      .slice(previousStart, activeIndex);
 
     return h(
       'section',
@@ -20,18 +23,17 @@
       h(
         'div',
         { className: 'stack-frame' },
-        ...previous.map((version, index) => {
-          const depth = previous.length - index;
+        ...previousVersions.map(({ version, versionIndex }) => {
+          const indexOffset = activeIndex - versionIndex;
           return h(
             'article',
             {
               key: version.id,
               className: 'preview-card is-stacked',
               style: {
-                transform: `translate3d(0, ${-14 * depth}px, ${-42 * depth}px) scale(${1 - depth * 0.045})`,
-                opacity: Math.max(0.14, 0.8 - depth * 0.14),
-                filter: `blur(${Math.min(3, depth * 0.7)}px)`,
-                zIndex: index + 1
+                transform: `translateZ(${-indexOffset * 120}px) translateY(${-indexOffset * 30}px) scale(${1 - indexOffset * 0.05})`,
+                opacity: Math.max(0, 1 - indexOffset * 0.15),
+                zIndex: versionIndex + 1
               },
               'aria-hidden': 'true'
             },
@@ -40,7 +42,14 @@
         }),
         h(
           'article',
-          { className: 'preview-card is-active', key: activeVersion.id },
+          {
+            className: 'preview-card is-active',
+            key: activeVersion.id,
+            style: {
+              transform: 'translateZ(0) scale(1)',
+              opacity: 1
+            }
+          },
           h('img', { src: activeVersion.image, alt: `${activeVersion.title} screenshot` }),
           h(
             'div',
