@@ -63,14 +63,32 @@
   }
 
   function Timeline({ versions, activeId, onSelect }) {
+    const [hoveredIndex, setHoveredIndex] = useState(null);
+
+    const getWaveStrength = (index) => {
+      if (hoveredIndex === null) return 0;
+      const distance = Math.abs(hoveredIndex - index);
+      if (distance === 0) return 1;
+      if (distance === 1) return 0.55;
+      if (distance === 2) return 0.28;
+      if (distance === 3) return 0.12;
+      return 0;
+    };
+
     return h(
       'aside',
       { className: 'timeline', 'aria-label': 'Version timeline' },
       h(
         'div',
-        { className: 'timeline-list', role: 'list' },
-        ...versions.map((version) => {
+        {
+          className: `timeline-list ${hoveredIndex !== null ? 'is-interacting' : ''}`,
+          role: 'list',
+          onMouseLeave: () => setHoveredIndex(null)
+        },
+        ...versions.map((version, index) => {
           const isActive = version.id === activeId;
+          const waveStrength = getWaveStrength(index);
+
           return h(
             'button',
             {
@@ -78,7 +96,14 @@
               className: `timeline-segment ${isActive ? 'is-active' : ''}`,
               role: 'listitem',
               'aria-label': `${version.title} - ${new Date(version.date).toLocaleDateString()}`,
-              onClick: () => onSelect(version.id)
+              onClick: () => onSelect(version.id),
+              onMouseEnter: () => setHoveredIndex(index),
+              onFocus: () => setHoveredIndex(index),
+              onBlur: () => setHoveredIndex(null),
+              style: {
+                '--wave-strength': waveStrength,
+                '--is-active': isActive ? 1 : 0
+              }
             },
             h('span', { className: 'timeline-segment-label' }, new Date(version.date).toLocaleDateString()),
             h('span', { className: 'timeline-segment-line' })

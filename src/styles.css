@@ -139,11 +139,17 @@ body {
 }
 
 .timeline-segment-line {
-  width: 44px;
-  height: 3px;
+  --base-width: 44px;
+  --active-width-boost: calc(var(--is-active, 0) * 12px);
+  --wave-width-boost: calc(var(--wave-strength, 0) * 16px);
+  --base-height: 3px;
+  --active-height-boost: calc(var(--is-active, 0) * 2px);
+  --wave-height-boost: calc(var(--wave-strength, 0) * 5px);
+  width: calc(var(--base-width) + var(--active-width-boost) + var(--wave-width-boost));
+  height: calc(var(--base-height) + var(--active-height-boost) + var(--wave-height-boost));
   border-radius: 999px;
   background: #c9c9c9;
-  transition: width 240ms ease, background-color 240ms ease, height 240ms ease;
+  transition: width 210ms ease, height 210ms ease, background-color 210ms ease;
   transform-origin: right center;
   flex: 0 0 auto;
 }
@@ -158,24 +164,17 @@ body {
   flex: 0 0 auto;
 }
 
-.timeline-list:hover .timeline-segment-label {
+.timeline-list:hover .timeline-segment-label,
+.timeline-list.is-interacting .timeline-segment-label {
   opacity: 0.8;
 }
 
-.timeline-segment:hover .timeline-segment-line {
-  width: 86px;
-  height: 4px;
+.timeline-segment:hover .timeline-segment-line,
+.timeline-segment:focus-visible .timeline-segment-line {
   background: #9ca3af;
 }
 
-.timeline-segment:hover + .timeline-segment .timeline-segment-line,
-.timeline-segment:has(+ .timeline-segment:hover) .timeline-segment-line {
-  width: 64px;
-}
-
 .timeline-segment.is-active .timeline-segment-line {
-  width: 98px;
-  height: 5px;
   background: #ef4444;
 }
 
