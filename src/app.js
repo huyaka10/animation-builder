@@ -80,8 +80,8 @@
               'aria-label': `${version.title} - ${new Date(version.date).toLocaleDateString()}`,
               onClick: () => onSelect(version.id)
             },
-            h('span', { className: 'timeline-segment-line' }),
-            h('span', { className: 'timeline-segment-label' }, new Date(version.date).toLocaleDateString())
+            h('span', { className: 'timeline-segment-label' }, new Date(version.date).toLocaleDateString()),
+            h('span', { className: 'timeline-segment-line' })
           );
         })
       )

@@ -18,9 +18,9 @@ body {
 .app-shell {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 1fr 150px;
+  grid-template-columns: 1fr;
   gap: 1.2rem;
-  padding: 1.2rem;
+  padding: 1.2rem 180px 1.2rem 1.2rem;
 }
 
 .workspace {
@@ -96,14 +96,19 @@ body {
 }
 
 .timeline {
+  position: fixed;
+  top: 1.2rem;
+  right: 0;
+  bottom: 1.2rem;
+  width: 170px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding-right: 0.4rem;
+  justify-content: flex-end;
+  padding-right: 0.35rem;
+  z-index: 30;
 }
 
 .timeline-list {
-  height: min(84vh, 900px);
+  height: 100%;
   width: 100%;
   overflow-y: auto;
   overflow-x: visible;
@@ -122,7 +127,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 8px;
   cursor: pointer;
   width: 100%;
 }
@@ -133,15 +138,18 @@ body {
   border-radius: 999px;
   background: #c9c9c9;
   transition: width 240ms ease, background-color 240ms ease, height 240ms ease;
+  transform-origin: right center;
+  flex: 0 0 auto;
 }
 
 .timeline-segment-label {
-  min-width: 76px;
+  min-width: 80px;
   text-align: right;
   font-size: 0.78rem;
   color: #8a8a8a;
   opacity: 0;
   transition: opacity 220ms ease;
+  flex: 0 0 auto;
 }
 
 .timeline-list:hover .timeline-segment-label {
@@ -297,8 +305,11 @@ button.danger {
   }
 
   .timeline {
+    position: static;
+    width: 100%;
     order: 2;
     justify-content: flex-end;
+    padding-right: 0;
   }
 
   .timeline-list {
