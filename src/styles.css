@@ -12,7 +12,7 @@
 body {
   margin: 0;
   background: #ececec;
-  padding-bottom: 5.5rem;
+  padding-bottom: 6rem;
 }
 
 .app-shell {
@@ -174,79 +174,72 @@ body {
 }
 
 
-.controls-drawer {
+.bottom-panel {
   position: fixed;
-  left: 50%;
-  bottom: 0.85rem;
-  transform: translateX(-50%);
-  width: min(860px, calc(100vw - 2rem));
-  z-index: 40;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.55rem;
-}
-
-.settings-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  border: 1px solid #cdd3db;
-  background: #ffffff;
-  color: #1f2937;
-  border-radius: 999px;
-  padding: 0.55rem 1rem;
-  font-weight: 600;
-}
-
-.controls-panel {
+  bottom: 0;
+  left: 0;
   width: 100%;
+  z-index: 40;
   background: #f4f4f4;
-  border: 1px solid #d7d7d7;
-  border-radius: 14px;
-  transform: translateY(100%);
+  border-top: 1px solid #d7d7d7;
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
+  box-shadow: 0 -8px 20px rgba(15, 23, 42, 0.12);
+  transform: translateY(calc(100% - 24px));
   transition: transform 300ms ease-out;
-  pointer-events: none;
 }
 
-.controls-drawer.is-open .controls-panel {
+.bottom-panel.is-open {
   transform: translateY(0);
-  pointer-events: auto;
 }
 
-.controls-header {
+.panel-handle {
+  height: 24px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0.8rem 1rem 0.35rem;
-  font-weight: 600;
+  justify-content: center;
+  gap: 0.45rem;
+  cursor: pointer;
   color: #334155;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
+  transition: height 200ms ease, box-shadow 200ms ease, background-color 200ms ease;
+  background: #eef1f4;
 }
 
-.collapse-button {
-  border: 1px solid #d1d5db;
-  background: #ffffff;
-  color: #1f2937;
-  border-radius: 999px;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  display: grid;
-  place-items: center;
+.panel-handle:hover {
+  height: 36px;
+  box-shadow: 0 -8px 20px rgba(15, 23, 42, 0.18);
+  background: #e7ecf2;
 }
+
+.panel-content {
+  padding: 0.5rem 1rem 1rem;
+}
+
 
 .chevron {
   display: inline-block;
   line-height: 1;
-  transform: rotate(0deg);
   transition: transform 300ms ease-out;
 }
 
-.chevron.is-open {
+.bottom-panel.is-open .chevron {
   transform: rotate(180deg);
 }
 
+.panel-handle:hover .chevron {
+  transform: translateY(1px);
+}
+
+.bottom-panel.is-open .panel-handle:hover .chevron {
+  transform: rotate(180deg) translateY(-1px);
+}
+
 .controls {
+
   background: transparent;
   border: 0;
   border-radius: 0;
@@ -334,9 +327,9 @@ button.danger {
     text-align: center;
   }
 
-  .controls-drawer {
-    width: calc(100vw - 1.2rem);
-    bottom: 0.5rem;
+  .bottom-panel {
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
   }
 
   .controls {
@@ -345,9 +338,3 @@ button.danger {
 }
 
 
-.settings-toggle,
-.collapse-button {
-  background: #ffffff;
-  color: #1f2937;
-  border: 1px solid #d1d5db;
-}

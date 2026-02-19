@@ -93,17 +93,6 @@
     const [title, setTitle] = useState('');
     const [isOpen, setIsOpen] = useState(false);
 
-    useEffect(() => {
-      const onKeyDown = (event) => {
-        if (event.key === 'Escape') {
-          setIsOpen(false);
-        }
-      };
-
-      window.addEventListener('keydown', onKeyDown);
-      return () => window.removeEventListener('keydown', onKeyDown);
-    }, []);
-
     const submitUpload = (event) => {
       const file = event.target.files?.[0];
       if (!file) return;
@@ -114,37 +103,28 @@
 
     return h(
       'div',
-      { className: `controls-drawer ${isOpen ? 'is-open' : ''}` },
+      { className: `bottom-panel ${isOpen ? 'is-open' : ''}`, 'aria-label': 'Version controls' },
       h(
-        'button',
+        'div',
         {
-          className: 'settings-toggle',
-          type: 'button',
+          className: 'panel-handle',
+          role: 'button',
+          tabIndex: 0,
           onClick: () => setIsOpen((current) => !current),
-          'aria-expanded': isOpen,
-          'aria-controls': 'settings-panel'
+          onKeyDown: (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              setIsOpen((current) => !current);
+            }
+          },
+          'aria-expanded': isOpen
         },
         h('span', null, 'Settings'),
         h('span', { className: `chevron ${isOpen ? 'is-open' : ''}`, 'aria-hidden': 'true' }, '⌃')
       ),
       h(
-        'section',
-        { className: 'controls-panel', id: 'settings-panel', 'aria-label': 'Version controls' },
-        h(
-          'div',
-          { className: 'controls-header' },
-          h('span', null, 'Settings'),
-          h(
-            'button',
-            {
-              className: 'collapse-button',
-              type: 'button',
-              onClick: () => setIsOpen(false),
-              'aria-label': 'Collapse settings'
-            },
-            h('span', { className: `chevron ${isOpen ? 'is-open' : ''}`, 'aria-hidden': 'true' }, '⌃')
-          )
-        ),
+        'div',
+        { className: 'panel-content' },
         h(
           'section',
           { className: 'controls' },
@@ -190,6 +170,7 @@
       )
     );
   }
+
 
   function App() {
     const [versions, setVersions] = useState([]);
