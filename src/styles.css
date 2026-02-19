@@ -58,8 +58,8 @@ body {
   border-radius: 16px;
   overflow: hidden;
   transition: transform 500ms ease, opacity 400ms ease;
-  border: 1px solid rgba(15, 23, 42, 0.15);
-  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.18);
+  border: 0;
+  box-shadow: 0 24px 36px rgba(15, 23, 42, 0.12);
   background: #c9c9c9;
   transform-origin: center center;
   will-change: transform, opacity;
@@ -141,13 +141,13 @@ body {
 .timeline-segment-line {
   --base-width: 44px;
   --active-width-boost: calc(var(--is-active, 0) * 12px);
-  --wave-width-boost: calc(var(--wave-strength, 0) * 16px);
+  --wave-width-boost: calc(var(--wave-strength, 0) * 46px);
   --base-height: 3px;
   --active-height-boost: calc(var(--is-active, 0) * 2px);
-  --wave-height-boost: calc(var(--wave-strength, 0) * 5px);
+  --wave-height-boost: calc(var(--wave-strength, 0) * 9px);
   width: calc(var(--base-width) + var(--active-width-boost) + var(--wave-width-boost));
   height: calc(var(--base-height) + var(--active-height-boost) + var(--wave-height-boost));
-  border-radius: 999px;
+  border-radius: 0;
   background: #c9c9c9;
   transition: width 210ms ease, height 210ms ease, background-color 210ms ease;
   transform-origin: right center;
