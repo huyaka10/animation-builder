@@ -106,7 +106,7 @@ body {
   top: 1.2rem;
   right: 0;
   bottom: 1.2rem;
-  width: 170px;
+  width: 300px;
   display: flex;
   justify-content: flex-end;
   padding-right: 0;
@@ -164,15 +164,17 @@ body {
 }
 
 .timeline-segment-label {
-  min-width: 132px;
+  min-width: 220px;
   text-align: right;
   color: #8a8a8a;
   opacity: 0;
   transition: opacity 220ms ease;
   flex: 0 0 auto;
-  display: grid;
-  gap: 2px;
-  justify-items: end;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  white-space: nowrap;
 }
 
 .timeline-list:hover .timeline-segment-label,
@@ -180,10 +182,16 @@ body {
   opacity: 0.8;
 }
 
+.timeline-list:hover .timeline-separator-label,
+.timeline-list.is-interacting .timeline-separator-label {
+  opacity: 1;
+}
+
 .timeline-segment-title {
   font-size: 0.78rem;
   font-weight: 600;
   color: #5b5b5b;
+  max-width: none;
 }
 
 .timeline-segment-date {
@@ -204,17 +212,18 @@ body {
 }
 
 .timeline-separator-label {
-  min-width: 132px;
+  min-width: 220px;
   text-align: right;
   font-size: 0.68rem;
-  color: #6b7280;
+  color: #afafaf;
+  opacity: 0;
 }
 
 .timeline-separator-line {
   width: 40px;
   height: 2px;
   border-radius: 0;
-  background: #9ca3af;
+  background: #afafaf;
   flex: 0 0 auto;
 }
 

@@ -3,8 +3,8 @@
   const h = React.createElement;
   const STORAGE_KEY = 'site_versions';
 
-  const createPlaceholderImage = (hex) => {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="none"><rect width="1600" height="900" fill="${hex}" /></svg>`;
+  const createPlaceholderImage = (colors) => {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="none"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${colors[0]}"/><stop offset="50%" stop-color="${colors[1]}"/><stop offset="100%" stop-color="${colors[2]}"/></linearGradient></defs><rect width="1600" height="900" fill="url(#g)"/></svg>`;
     return `data:image/svg+xml,${encodeURIComponent(svg)}`;
   };
 
@@ -32,13 +32,33 @@
     return `${day}.${month}.${year}`;
   };
 
-  const DEFAULT_VERSIONS = [
-    { id: 'default-1', title: 'Initial Landing', date: '2024-01-12', image: createPlaceholderImage('#f59e0b') },
-    { id: 'default-2', title: 'Hero Update', date: '2024-02-08', image: createPlaceholderImage('#f97316') },
-    { id: 'default-3', title: 'Pricing Refresh', date: '2024-03-15', image: createPlaceholderImage('#10b981') },
-    { id: 'default-4', title: 'Checkout Flow', date: '2024-04-19', image: createPlaceholderImage('#3b82f6') },
-    { id: 'default-5', title: 'Summer Promo', date: '2024-05-27', image: createPlaceholderImage('#8b5cf6') }
-  ];
+  const createCurrentMonthDefaults = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const day = now.getDate();
+
+    const gradientSets = [
+      ['#7c3aed', '#06b6d4', '#22d3ee'],
+      ['#ec4899', '#f97316', '#f59e0b'],
+      ['#2563eb', '#0ea5e9', '#14b8a6'],
+      ['#84cc16', '#22c55e', '#10b981'],
+      ['#8b5cf6', '#6366f1', '#3b82f6']
+    ];
+
+    return gradientSets.map((colors, index) => {
+      const date = new Date(year, month, Math.max(1, day - (gradientSets.length - 1 - index) * 3));
+      return {
+        id: `default-${index + 1}`,
+        title: `Preset ${index + 1}`,
+        date: date.toISOString().slice(0, 10),
+        image: createPlaceholderImage(colors)
+      };
+    });
+  };
+
+  const DEFAULT_VERSIONS = createCurrentMonthDefaults();
+
 
   function VersionStage({ versions, activeVersion, activeIndex }) {
     if (!activeVersion) {
