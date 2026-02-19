@@ -28,7 +28,7 @@
               key: version.id,
               className: 'preview-card is-stacked',
               style: {
-                transform: `translateY(${-16 * depth}px) scale(${1 - depth * 0.05})`,
+                transform: `translate3d(0, ${-14 * depth}px, ${-42 * depth}px) scale(${1 - depth * 0.045})`,
                 opacity: Math.max(0.14, 0.8 - depth * 0.14),
                 filter: `blur(${Math.min(3, depth * 0.7)}px)`,
                 zIndex: index + 1
@@ -57,21 +57,22 @@
     return h(
       'aside',
       { className: 'timeline', 'aria-label': 'Version timeline' },
-      h('h3', null, 'Timeline'),
       h(
         'div',
-        { className: 'timeline-list' },
+        { className: 'timeline-list', role: 'list' },
         ...versions.map((version) => {
           const isActive = version.id === activeId;
           return h(
             'button',
             {
               key: version.id,
-              className: `timeline-item ${isActive ? 'is-active' : ''}`,
+              className: `timeline-segment ${isActive ? 'is-active' : ''}`,
+              role: 'listitem',
+              'aria-label': `${version.title} - ${new Date(version.date).toLocaleDateString()}`,
               onClick: () => onSelect(version.id)
             },
-            h('span', { className: 'timeline-date' }, new Date(version.date).toLocaleDateString()),
-            h('strong', null, version.title)
+            h('span', { className: 'timeline-segment-line' }),
+            h('span', { className: 'timeline-segment-label' }, new Date(version.date).toLocaleDateString())
           );
         })
       )
