@@ -144,7 +144,7 @@ body {
 
 .timeline-segment-line {
   --base-width: 20px;
-  --wave-width-boost: calc(var(--wave-strength, 0) * 34px);
+  --wave-width-boost: calc(var(--wave-strength, 0) * 72px);
   --base-height: 2px;
   --wave-height-boost: calc(var(--wave-strength, 0) * 26px);
   width: calc(var(--base-width) + var(--wave-width-boost));
