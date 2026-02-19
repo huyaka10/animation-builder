@@ -8,6 +8,30 @@
     return `data:image/svg+xml,${encodeURIComponent(svg)}`;
   };
 
+
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+  const getStartOfDay = (value) => {
+    const date = new Date(value);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  };
+
+  const formatDisplayDate = (value) => {
+    const target = getStartOfDay(value);
+    const today = getStartOfDay(new Date());
+    const diffDays = Math.round((today - target) / MS_PER_DAY);
+
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays > 1 && diffDays <= 31) return `${diffDays} days ago`;
+
+    const day = String(target.getDate()).padStart(2, '0');
+    const month = String(target.getMonth() + 1).padStart(2, '0');
+    const year = target.getFullYear();
+    return `${day}.${month}.${year}`;
+  };
+
   const DEFAULT_VERSIONS = [
     { id: 'default-1', title: 'Initial Landing', date: '2024-01-12', image: createPlaceholderImage('#f59e0b') },
     { id: 'default-2', title: 'Hero Update', date: '2024-02-08', image: createPlaceholderImage('#f97316') },
@@ -71,6 +95,34 @@
 
   function Timeline({ versions, activeId, onSelect }) {
     const [hoveredIndex, setHoveredIndex] = useState(null);
+    const listRef = useRef(null);
+    const pointerXRef = useRef(0);
+
+    useEffect(() => {
+      const handleMove = (event) => {
+        pointerXRef.current = event.clientX;
+      };
+
+      const handleWheel = (event) => {
+        const list = listRef.current;
+        if (!list) return;
+        const rightThreshold = window.innerWidth * 0.65;
+        if (pointerXRef.current < rightThreshold) return;
+
+        const hasScrollableSpace = list.scrollHeight > list.clientHeight;
+        if (!hasScrollableSpace) return;
+
+        event.preventDefault();
+        list.scrollTop += event.deltaY;
+      };
+
+      window.addEventListener('mousemove', handleMove);
+      window.addEventListener('wheel', handleWheel, { passive: false });
+      return () => {
+        window.removeEventListener('mousemove', handleMove);
+        window.removeEventListener('wheel', handleWheel);
+      };
+    }, []);
 
     const getWaveStrength = (index) => {
       if (hoveredIndex === null) return 0;
@@ -84,36 +136,81 @@
       return 0;
     };
 
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
+    const timelineItems = [];
+    versions.forEach((version, index) => {
+      const currentDate = new Date(version.date);
+      const previous = versions[index - 1];
+
+      if (previous) {
+        const prevDate = new Date(previous.date);
+        const isBoundary =
+          prevDate.getFullYear() !== currentDate.getFullYear() || prevDate.getMonth() !== currentDate.getMonth();
+        const isOlderMonth =
+          currentDate.getFullYear() !== currentYear || currentDate.getMonth() !== currentMonth;
+
+        if (isBoundary && isOlderMonth) {
+          const monthLabel = currentDate.toLocaleString('en-US', { month: 'long' });
+          timelineItems.push({
+            type: 'separator',
+            key: `month-${currentDate.getFullYear()}-${currentDate.getMonth()}-${index}`,
+            label: monthLabel
+          });
+        }
+      }
+
+      timelineItems.push({ type: 'version', key: version.id, version, index });
+    });
+
     return h(
       'aside',
       { className: 'timeline', 'aria-label': 'Version timeline' },
       h(
         'div',
         {
+          ref: listRef,
           className: `timeline-list ${hoveredIndex !== null ? 'is-interacting' : ''}`,
           role: 'list',
           onMouseLeave: () => setHoveredIndex(null)
         },
-        ...versions.map((version, index) => {
+        ...timelineItems.map((item) => {
+          if (item.type === 'separator') {
+            return h(
+              'div',
+              { key: item.key, className: 'timeline-separator', role: 'presentation', 'aria-hidden': 'true' },
+              h('span', { className: 'timeline-separator-label' }, item.label),
+              h('span', { className: 'timeline-separator-line' })
+            );
+          }
+
+          const version = item.version;
           const isActive = version.id === activeId;
-          const waveStrength = getWaveStrength(index);
+          const waveStrength = getWaveStrength(item.index);
 
           return h(
             'button',
             {
-              key: version.id,
+              key: item.key,
               className: `timeline-segment ${isActive ? 'is-active' : ''}`,
               role: 'listitem',
-              'aria-label': `${version.title} - ${new Date(version.date).toLocaleDateString()}`,
+              'aria-label': `${version.title} - ${formatDisplayDate(version.date)}`,
               onClick: () => onSelect(version.id),
-              onMouseEnter: () => setHoveredIndex(index),
-              onFocus: () => setHoveredIndex(index),
+              onMouseEnter: () => setHoveredIndex(item.index),
+              onFocus: () => setHoveredIndex(item.index),
               onBlur: () => setHoveredIndex(null),
               style: {
                 '--wave-strength': waveStrength
               }
             },
-            h('span', { className: 'timeline-segment-label' }, new Date(version.date).toLocaleDateString()),
+            h(
+              'span',
+              { className: 'timeline-segment-label' },
+              h('strong', { className: 'timeline-segment-title' }, version.title),
+              h('small', { className: 'timeline-segment-date' }, formatDisplayDate(version.date))
+            ),
             h('span', { className: 'timeline-segment-line' })
           );
         })
@@ -121,15 +218,16 @@
     );
   }
 
+
   function ControlPanel({ pendingDate, onDateChange, onUpload, activeVersion, onRename, onDelete, canDelete }) {
     const fileRef = useRef(null);
     const [title, setTitle] = useState('');
     const [isOpen, setIsOpen] = useState(false);
 
     const submitUpload = (event) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
-      onUpload({ file, title });
+      const files = Array.from(event.target.files || []);
+      if (files.length === 0) return;
+      onUpload({ files, title });
       event.target.value = '';
       setTitle('');
     };
@@ -186,7 +284,7 @@
           h(
             'div',
             { className: 'button-row' },
-            h('input', { ref: fileRef, type: 'file', accept: 'image/*', hidden: true, onChange: submitUpload }),
+            h('input', { ref: fileRef, type: 'file', accept: 'image/*', multiple: true, hidden: true, onChange: submitUpload }),
             h('button', { onClick: () => fileRef.current?.click() }, 'Upload Version'),
             h(
               'button',
@@ -260,15 +358,15 @@
       }
     }, [sortedVersions, activeId]);
 
-    const handleUpload = ({ file, title }) => {
-      const nextVersion = {
+    const handleUpload = ({ files, title }) => {
+      const nextVersions = files.map((file) => ({
         id: crypto.randomUUID(),
         title: title?.trim() || file.name.replace(/\.[^.]+$/, ''),
         date: pendingDate,
         image: URL.createObjectURL(file)
-      };
-      setVersions((current) => [...current, nextVersion]);
-      setActiveId(nextVersion.id);
+      }));
+      setVersions((current) => [...current, ...nextVersions]);
+      setActiveId(nextVersions[nextVersions.length - 1].id);
     };
 
     const handleRename = (id, title) => {
