@@ -3,6 +3,19 @@
   const h = React.createElement;
   const STORAGE_KEY = 'site_versions';
 
+  const createPlaceholderImage = (hex) => {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="none"><rect width="1600" height="900" fill="${hex}" /></svg>`;
+    return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  };
+
+  const DEFAULT_VERSIONS = [
+    { id: 'default-1', title: 'Initial Landing', date: '2024-01-12', image: createPlaceholderImage('#f59e0b') },
+    { id: 'default-2', title: 'Hero Update', date: '2024-02-08', image: createPlaceholderImage('#f97316') },
+    { id: 'default-3', title: 'Pricing Refresh', date: '2024-03-15', image: createPlaceholderImage('#10b981') },
+    { id: 'default-4', title: 'Checkout Flow', date: '2024-04-19', image: createPlaceholderImage('#3b82f6') },
+    { id: 'default-5', title: 'Summer Promo', date: '2024-05-27', image: createPlaceholderImage('#8b5cf6') }
+  ];
+
   function VersionStage({ versions, activeVersion, activeIndex }) {
     if (!activeVersion) {
       return h(
@@ -101,8 +114,7 @@
               onFocus: () => setHoveredIndex(index),
               onBlur: () => setHoveredIndex(null),
               style: {
-                '--wave-strength': waveStrength,
-                '--is-active': isActive ? 1 : 0
+                '--wave-strength': waveStrength
               }
             },
             h('span', { className: 'timeline-segment-label' }, new Date(version.date).toLocaleDateString()),
@@ -205,7 +217,8 @@
     useEffect(() => {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (!saved) {
-        setVersions([]);
+        setVersions(DEFAULT_VERSIONS);
+        setActiveId(DEFAULT_VERSIONS[DEFAULT_VERSIONS.length - 1].id);
         return;
       }
 
@@ -218,10 +231,12 @@
             setActiveId(fallback.id);
           }
         } else {
-          setVersions([]);
+          setVersions(DEFAULT_VERSIONS);
+          setActiveId(DEFAULT_VERSIONS[DEFAULT_VERSIONS.length - 1].id);
         }
       } catch (error) {
-        setVersions([]);
+        setVersions(DEFAULT_VERSIONS);
+        setActiveId(DEFAULT_VERSIONS[DEFAULT_VERSIONS.length - 1].id);
       }
     }, []);
 
