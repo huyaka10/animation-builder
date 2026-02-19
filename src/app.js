@@ -31,7 +31,7 @@
               key: version.id,
               className: 'preview-card is-stacked',
               style: {
-                transform: `translateZ(${-indexOffset * 120}px) translateY(${-indexOffset * 30}px) scale(${1 - indexOffset * 0.05})`,
+                transform: `translateZ(${-indexOffset * 140}px) translateY(${-indexOffset * 42}px) scale(${1 - indexOffset * 0.05})`,
                 opacity: Math.max(0, 1 - indexOffset * 0.15),
                 zIndex: versionIndex + 1
               },
