@@ -1,32 +1,17 @@
 (() => {
-  const { useMemo, useState, useRef } = React;
+  const { useEffect, useMemo, useState, useRef } = React;
   const h = React.createElement;
-
-  const seedVersions = [
-    {
-      id: crypto.randomUUID(),
-      title: 'Homepage v1',
-      date: '2024-10-05',
-      image:
-        'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1600&q=80'
-    },
-    {
-      id: crypto.randomUUID(),
-      title: 'Homepage v2',
-      date: '2024-12-18',
-      image:
-        'https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?auto=format&fit=crop&w=1600&q=80'
-    },
-    {
-      id: crypto.randomUUID(),
-      title: 'Landing refresh',
-      date: '2025-02-22',
-      image:
-        'https://images.unsplash.com/photo-1487014679447-9f8336841d58?auto=format&fit=crop&w=1600&q=80'
-    }
-  ];
+  const STORAGE_KEY = 'site_versions';
 
   function VersionStage({ versions, activeVersion, activeIndex }) {
+    if (!activeVersion) {
+      return h(
+        'section',
+        { className: 'stage', 'aria-label': 'Version preview stage' },
+        h('div', { className: 'stack-frame' }, h('article', { className: 'preview-card is-active' }))
+      );
+    }
+
     const previous = versions.slice(Math.max(0, activeIndex - 5), activeIndex);
 
     return h(
@@ -135,10 +120,14 @@
         { className: 'button-row' },
         h('input', { ref: fileRef, type: 'file', accept: 'image/*', hidden: true, onChange: submitUpload }),
         h('button', { onClick: () => fileRef.current?.click() }, 'Upload Version'),
-        h('button', { onClick: () => onRename(activeVersion.id, title), disabled: !title.trim() }, 'Rename Version'),
         h(
           'button',
-          { onClick: () => onDelete(activeVersion.id), disabled: !canDelete, className: 'danger' },
+          { onClick: () => onRename(activeVersion?.id, title), disabled: !title.trim() || !activeVersion },
+          'Rename Version'
+        ),
+        h(
+          'button',
+          { onClick: () => onDelete(activeVersion?.id), disabled: !canDelete || !activeVersion, className: 'danger' },
           'Delete Version'
         )
       )
@@ -146,9 +135,36 @@
   }
 
   function App() {
-    const [versions, setVersions] = useState(seedVersions);
-    const [activeId, setActiveId] = useState(seedVersions[seedVersions.length - 1].id);
+    const [versions, setVersions] = useState([]);
+    const [activeId, setActiveId] = useState(null);
     const [pendingDate, setPendingDate] = useState(new Date().toISOString().slice(0, 10));
+
+    useEffect(() => {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) {
+        setVersions([]);
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setVersions(parsed);
+          if (parsed.length > 0) {
+            const fallback = [...parsed].sort((a, b) => new Date(a.date) - new Date(b.date)).at(-1);
+            setActiveId(fallback.id);
+          }
+        } else {
+          setVersions([]);
+        }
+      } catch (error) {
+        setVersions([]);
+      }
+    }, []);
+
+    useEffect(() => {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(versions));
+    }, [versions]);
 
     const sortedVersions = useMemo(
       () => [...versions].sort((a, b) => new Date(a.date) - new Date(b.date)),
@@ -157,6 +173,18 @@
 
     const activeIndex = sortedVersions.findIndex((version) => version.id === activeId);
     const activeVersion = sortedVersions[activeIndex] ?? sortedVersions[sortedVersions.length - 1];
+
+    useEffect(() => {
+      if (sortedVersions.length === 0) {
+        if (activeId !== null) setActiveId(null);
+        return;
+      }
+
+      const exists = sortedVersions.some((version) => version.id === activeId);
+      if (!exists) {
+        setActiveId(sortedVersions[sortedVersions.length - 1].id);
+      }
+    }, [sortedVersions, activeId]);
 
     const handleUpload = ({ file, title }) => {
       const nextVersion = {
@@ -170,12 +198,14 @@
     };
 
     const handleRename = (id, title) => {
+      if (!id) return;
       setVersions((current) =>
         current.map((version) => (version.id === id ? { ...version, title: title.trim() || version.title } : version))
       );
     };
 
     const handleDelete = (id) => {
+      if (!id) return;
       setVersions((current) => {
         const filtered = current.filter((version) => version.id !== id);
         if (filtered.length === 0) return current;
@@ -204,7 +234,7 @@
           canDelete: sortedVersions.length > 1
         })
       ),
-      h(Timeline, { versions: sortedVersions, activeId: activeVersion.id, onSelect: setActiveId })
+      h(Timeline, { versions: sortedVersions, activeId: activeVersion?.id, onSelect: setActiveId })
     );
   }
 
