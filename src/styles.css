@@ -178,7 +178,9 @@ body {
   position: fixed;
   bottom: 0;
   left: 0;
-  width: 100%;
+  right: 0;
+  width: min(860px, calc(100vw - 1.2rem));
+  margin: 0 auto;
   z-index: 40;
   background: #f4f4f4;
   border-top: 1px solid #d7d7d7;
@@ -205,18 +207,17 @@ body {
   font-weight: 600;
   border-top-left-radius: 14px;
   border-top-right-radius: 14px;
-  transition: height 200ms ease, box-shadow 200ms ease, background-color 200ms ease;
+  transition: height 200ms ease, background-color 200ms ease;
   background: #eef1f4;
 }
 
 .panel-handle:hover {
   height: 36px;
-  box-shadow: 0 -8px 20px rgba(15, 23, 42, 0.18);
   background: #e7ecf2;
 }
 
 .panel-content {
-  padding: 0.5rem 1rem 1rem;
+  padding: 0.4rem 0.7rem 0.8rem;
 }
 
 
@@ -243,7 +244,7 @@ body {
   background: transparent;
   border: 0;
   border-radius: 0;
-  padding: 0.8rem 1rem 1rem;
+  padding: 0.55rem 0.7rem 0.7rem;
   display: grid;
   grid-template-columns: repeat(2, minmax(180px, 1fr)) auto;
   gap: 0.8rem;
@@ -328,6 +329,7 @@ button.danger {
   }
 
   .bottom-panel {
+    width: calc(100vw - 0.6rem);
     border-top-left-radius: 12px;
     border-top-right-radius: 12px;
   }
