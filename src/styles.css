@@ -106,11 +106,12 @@ body {
   top: 1.2rem;
   right: 0;
   bottom: 1.2rem;
-  width: 300px;
+  width: 250px;
   display: flex;
   justify-content: flex-end;
   padding-right: 0;
   z-index: 30;
+  overflow: visible;
 }
 
 .timeline-list {
@@ -164,7 +165,7 @@ body {
 }
 
 .timeline-segment-label {
-  min-width: 220px;
+  min-width: 260px;
   text-align: right;
   color: #8a8a8a;
   opacity: 0;
@@ -212,7 +213,7 @@ body {
 }
 
 .timeline-separator-label {
-  min-width: 220px;
+  min-width: 260px;
   text-align: right;
   font-size: 0.68rem;
   color: #afafaf;

@@ -3,11 +3,6 @@
   const h = React.createElement;
   const STORAGE_KEY = 'site_versions';
 
-  const createPlaceholderImage = (colors) => {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="none"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${colors[0]}"/><stop offset="50%" stop-color="${colors[1]}"/><stop offset="100%" stop-color="${colors[2]}"/></linearGradient></defs><rect width="1600" height="900" fill="url(#g)"/></svg>`;
-    return `data:image/svg+xml,${encodeURIComponent(svg)}`;
-  };
-
 
   const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -35,26 +30,45 @@
   const createCurrentMonthDefaults = () => {
     const now = new Date();
     const year = now.getFullYear();
-    const month = now.getMonth();
-    const day = now.getDate();
+    const febDate = new Date(year, now.getMonth(), Math.max(1, now.getDate() - 2)).toISOString().slice(0, 10);
 
-    const gradientSets = [
-      ['#7c3aed', '#06b6d4', '#22d3ee'],
-      ['#ec4899', '#f97316', '#f59e0b'],
-      ['#2563eb', '#0ea5e9', '#14b8a6'],
-      ['#84cc16', '#22c55e', '#10b981'],
-      ['#8b5cf6', '#6366f1', '#3b82f6']
+    return [
+      {
+        id: 'default-1',
+        title: 'Misty Mountains',
+        date: `${year}-01-05`,
+        image:
+          'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80'
+      },
+      {
+        id: 'default-2',
+        title: 'Forest Lake',
+        date: `${year}-01-11`,
+        image:
+          'https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1600&q=80'
+      },
+      {
+        id: 'default-3',
+        title: 'Sunset Valley',
+        date: `${year}-01-17`,
+        image:
+          'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&w=1600&q=80'
+      },
+      {
+        id: 'default-4',
+        title: 'Ocean Cliffs',
+        date: `${year}-01-23`,
+        image:
+          'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80'
+      },
+      {
+        id: 'default-5',
+        title: 'Winter Pines',
+        date: febDate,
+        image:
+          'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?auto=format&fit=crop&w=1600&q=80'
+      }
     ];
-
-    return gradientSets.map((colors, index) => {
-      const date = new Date(year, month, Math.max(1, day - (gradientSets.length - 1 - index) * 3));
-      return {
-        id: `default-${index + 1}`,
-        title: `Preset ${index + 1}`,
-        date: date.toISOString().slice(0, 10),
-        image: createPlaceholderImage(colors)
-      };
-    });
   };
 
   const DEFAULT_VERSIONS = createCurrentMonthDefaults();
@@ -377,6 +391,24 @@
         setActiveId(sortedVersions[sortedVersions.length - 1].id);
       }
     }, [sortedVersions, activeId]);
+
+    useEffect(() => {
+      const onKeyDown = (event) => {
+        if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+        const tag = event.target?.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || event.target?.isContentEditable) return;
+        if (sortedVersions.length === 0) return;
+
+        event.preventDefault();
+        const currentIndex = sortedVersions.findIndex((version) => version.id === activeVersion?.id);
+        const safeIndex = currentIndex >= 0 ? currentIndex : sortedVersions.length - 1;
+        const nextIndex = event.key === 'ArrowUp' ? Math.max(0, safeIndex - 1) : Math.min(sortedVersions.length - 1, safeIndex + 1);
+        setActiveId(sortedVersions[nextIndex].id);
+      };
+
+      window.addEventListener('keydown', onKeyDown);
+      return () => window.removeEventListener('keydown', onKeyDown);
+    }, [sortedVersions, activeVersion?.id]);
 
     const handleUpload = ({ files, title }) => {
       const nextVersions = files.map((file) => ({
