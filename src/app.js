@@ -32,7 +32,7 @@
               className: 'preview-card is-stacked',
               style: {
                 transform: `translateY(${-offset * 80}px) translateZ(${-offset * 120}px) scale(${1 - offset * 0.05})`,
-                opacity: Math.max(0, 1 - offset * 0.15),
+                opacity: 1,
                 zIndex: versionIndex + 1
               },
               'aria-hidden': 'true'

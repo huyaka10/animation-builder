@@ -20,13 +20,14 @@ body {
   display: grid;
   grid-template-columns: 1fr;
   gap: 1.2rem;
-  padding: 1.2rem 180px 1.2rem 1.2rem;
+  padding: 1.2rem;
 }
 
 .workspace {
-  display: grid;
-  grid-template-rows: 1fr;
-  gap: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 2.4rem);
 }
 
 .stage {
@@ -39,8 +40,8 @@ body {
 }
 
 .stack-frame {
-  width: min(980px, 94%);
-  height: min(64vh, 680px);
+  width: min(1120px, 96vw);
+  height: min(70vh, 760px);
   position: relative;
   perspective: 1200px;
   transform-style: preserve-3d;
