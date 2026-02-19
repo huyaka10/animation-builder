@@ -24,15 +24,15 @@
         'div',
         { className: 'stack-frame' },
         ...previousVersions.map(({ version, versionIndex }) => {
-          const indexOffset = activeIndex - versionIndex;
+          const offset = activeIndex - versionIndex;
           return h(
             'article',
             {
               key: version.id,
               className: 'preview-card is-stacked',
               style: {
-                transform: `translateZ(${-indexOffset * 140}px) translateY(${-indexOffset * 42}px) scale(${1 - indexOffset * 0.05})`,
-                opacity: Math.max(0, 1 - indexOffset * 0.15),
+                transform: `translateY(${-offset * 80}px) translateZ(${-offset * 120}px) scale(${1 - offset * 0.05})`,
+                opacity: Math.max(0, 1 - offset * 0.15),
                 zIndex: versionIndex + 1
               },
               'aria-hidden': 'true'
