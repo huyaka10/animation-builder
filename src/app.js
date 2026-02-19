@@ -91,6 +91,18 @@
   function ControlPanel({ pendingDate, onDateChange, onUpload, activeVersion, onRename, onDelete, canDelete }) {
     const fileRef = useRef(null);
     const [title, setTitle] = useState('');
+    const [isOpen, setIsOpen] = useState(false);
+
+    useEffect(() => {
+      const onKeyDown = (event) => {
+        if (event.key === 'Escape') {
+          setIsOpen(false);
+        }
+      };
+
+      window.addEventListener('keydown', onKeyDown);
+      return () => window.removeEventListener('keydown', onKeyDown);
+    }, []);
 
     const submitUpload = (event) => {
       const file = event.target.files?.[0];
@@ -101,44 +113,79 @@
     };
 
     return h(
-      'section',
-      { className: 'controls', 'aria-label': 'Version controls' },
+      'div',
+      { className: `controls-drawer ${isOpen ? 'is-open' : ''}` },
       h(
-        'div',
-        { className: 'control-group' },
-        h('label', { htmlFor: 'title' }, 'Rename / New Title'),
-        h('input', {
-          id: 'title',
-          value: title,
-          onChange: (event) => setTitle(event.target.value),
-          placeholder: 'e.g. Pricing revamp'
-        })
+        'button',
+        {
+          className: 'settings-toggle',
+          type: 'button',
+          onClick: () => setIsOpen((current) => !current),
+          'aria-expanded': isOpen,
+          'aria-controls': 'settings-panel'
+        },
+        h('span', null, 'Settings'),
+        h('span', { className: `chevron ${isOpen ? 'is-open' : ''}`, 'aria-hidden': 'true' }, '⌃')
       ),
       h(
-        'div',
-        { className: 'control-group' },
-        h('label', { htmlFor: 'date' }, 'Set Date'),
-        h('input', {
-          id: 'date',
-          type: 'date',
-          value: pendingDate,
-          onChange: (event) => onDateChange(event.target.value)
-        })
-      ),
-      h(
-        'div',
-        { className: 'button-row' },
-        h('input', { ref: fileRef, type: 'file', accept: 'image/*', hidden: true, onChange: submitUpload }),
-        h('button', { onClick: () => fileRef.current?.click() }, 'Upload Version'),
+        'section',
+        { className: 'controls-panel', id: 'settings-panel', 'aria-label': 'Version controls' },
         h(
-          'button',
-          { onClick: () => onRename(activeVersion?.id, title), disabled: !title.trim() || !activeVersion },
-          'Rename Version'
+          'div',
+          { className: 'controls-header' },
+          h('span', null, 'Settings'),
+          h(
+            'button',
+            {
+              className: 'collapse-button',
+              type: 'button',
+              onClick: () => setIsOpen(false),
+              'aria-label': 'Collapse settings'
+            },
+            h('span', { className: `chevron ${isOpen ? 'is-open' : ''}`, 'aria-hidden': 'true' }, '⌃')
+          )
         ),
         h(
-          'button',
-          { onClick: () => onDelete(activeVersion?.id), disabled: !canDelete || !activeVersion, className: 'danger' },
-          'Delete Version'
+          'section',
+          { className: 'controls' },
+          h(
+            'div',
+            { className: 'control-group' },
+            h('label', { htmlFor: 'title' }, 'Rename / New Title'),
+            h('input', {
+              id: 'title',
+              value: title,
+              onChange: (event) => setTitle(event.target.value),
+              placeholder: 'e.g. Pricing revamp'
+            })
+          ),
+          h(
+            'div',
+            { className: 'control-group' },
+            h('label', { htmlFor: 'date' }, 'Set Date'),
+            h('input', {
+              id: 'date',
+              type: 'date',
+              value: pendingDate,
+              onChange: (event) => onDateChange(event.target.value)
+            })
+          ),
+          h(
+            'div',
+            { className: 'button-row' },
+            h('input', { ref: fileRef, type: 'file', accept: 'image/*', hidden: true, onChange: submitUpload }),
+            h('button', { onClick: () => fileRef.current?.click() }, 'Upload Version'),
+            h(
+              'button',
+              { onClick: () => onRename(activeVersion?.id, title), disabled: !title.trim() || !activeVersion },
+              'Rename Version'
+            ),
+            h(
+              'button',
+              { onClick: () => onDelete(activeVersion?.id), disabled: !canDelete || !activeVersion, className: 'danger' },
+              'Delete Version'
+            )
+          )
         )
       )
     );
