@@ -106,7 +106,7 @@ body {
   top: 1.2rem;
   right: 0;
   bottom: 1.2rem;
-  width: 250px;
+  width: min(460px, 44vw);
   display: flex;
   justify-content: flex-end;
   padding-right: 0;
@@ -136,6 +136,7 @@ body {
 
 .timeline-segment {
   border: 0;
+  outline: none;
   background: transparent;
   padding: 0;
   display: flex;
@@ -226,6 +227,12 @@ body {
   border-radius: 0;
   background: #afafaf;
   flex: 0 0 auto;
+}
+
+.timeline-segment:focus,
+.timeline-segment:focus-visible {
+  outline: none;
+  box-shadow: none;
 }
 
 
