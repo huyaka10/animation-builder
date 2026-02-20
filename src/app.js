@@ -5,19 +5,6 @@
 
 
   const MS_PER_DAY = 24 * 60 * 60 * 1000;
-  const IMAGE_POOL = [
-    'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80',
-    'https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1600&q=80',
-    'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&w=1600&q=80',
-    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80',
-    'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?auto=format&fit=crop&w=1600&q=80',
-    'https://images.unsplash.com/photo-1493244040629-496f6d136cc3?auto=format&fit=crop&w=1600&q=80',
-    'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=80',
-    'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=1600&q=80',
-    'https://images.unsplash.com/photo-1439066615861-d1af74d74000?auto=format&fit=crop&w=1600&q=80',
-    'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1600&q=80'
-  ];
-
   const getStartOfDay = (value) => {
     const date = new Date(value);
     date.setHours(0, 0, 0, 0);
@@ -41,33 +28,7 @@
     return `${day}.${month}.${year}`;
   };
 
-  const createCurrentMonthDefaults = () => {
-    const now = new Date();
-    const entries = [];
-    const monthNames = ['December', 'January', now.toLocaleString('en-US', { month: 'long' })];
-    const monthOffsets = [-2, -1, 0];
-    const counts = [10, 10, 20];
-
-    monthOffsets.forEach((offset, blockIndex) => {
-      const baseDate = new Date(now.getFullYear(), now.getMonth() + offset, 1);
-      const year = baseDate.getFullYear();
-      const month = baseDate.getMonth();
-      const count = counts[blockIndex];
-      const lastDay = new Date(year, month + 1, 0).getDate();
-
-      for (let i = 0; i < count; i += 1) {
-        const day = Math.min(lastDay, 1 + i);
-        entries.push({
-          id: `default-${blockIndex + 1}-${i + 1}`,
-          title: `${monthNames[blockIndex]} Snapshot ${String(i + 1).padStart(2, '0')}`,
-          date: new Date(year, month, day).toISOString().slice(0, 10),
-          image: IMAGE_POOL[(blockIndex * 10 + i) % IMAGE_POOL.length]
-        });
-      }
-    });
-
-    return entries;
-  };
+  const createCurrentMonthDefaults = () => [];
 
   const DEFAULT_VERSIONS = createCurrentMonthDefaults();
 
@@ -147,19 +108,13 @@
       return 0;
     };
 
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
-
     const timelineItems = [];
     let previousMonthKey = null;
     versions.forEach((version, index) => {
       const currentDate = new Date(version.date);
       const monthKey = `${currentDate.getFullYear()}-${currentDate.getMonth()}`;
-      const isCurrentMonth =
-        currentDate.getFullYear() === currentYear && currentDate.getMonth() === currentMonth;
 
-      if (monthKey !== previousMonthKey && !isCurrentMonth) {
+      if (monthKey !== previousMonthKey) {
         const monthLabel = currentDate.toLocaleString('en-US', { month: 'long' });
         timelineItems.push({
           type: 'separator',
