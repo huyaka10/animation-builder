@@ -73,7 +73,6 @@
         <input id="importJsonInput" type="file" accept="application/json" hidden />
         <button id="exportSvgBtn" class="btn">Export SVG</button>
 
-        <pre id="exportOutput" class="output" aria-live="polite"></pre>
       </aside>
     </div>
 
@@ -86,6 +85,8 @@
         <button id="cancelPresetBtn" class="btn" type="button">Cancel</button>
       </div>
     </dialog>
+
+    <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
 
     <script type="module" src="src/main.js"></script>
   </body>

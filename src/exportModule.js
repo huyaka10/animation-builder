@@ -1,6 +1,6 @@
 import { normalizeAnimationPayload } from './frameStore.js';
 
-export function exportAnimationJson(state, outputEl) {
+export function exportAnimationJson(state) {
   const payload = {
     frames: state.animation.frames,
     fps: state.animation.fps,
@@ -8,7 +8,6 @@ export function exportAnimationJson(state, outputEl) {
     color: state.animation.color,
     glow: Number(state.animation.glow ?? 0)
   };
-  outputEl.textContent = JSON.stringify(payload, null, 2);
   downloadText(JSON.stringify(payload, null, 2), 'animation.json', 'application/json');
 }
 

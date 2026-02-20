@@ -85,10 +85,10 @@ function createAnalyzingPreset() {
           [0, 0, 0]
         ]
       ],
-      fps: 4,
+      fps: 5,
       animationStyle: 'Fade',
-      color: '#FF8433',
-      glow: 0
+      color: '#DDF730',
+      glow: 18
     }
   };
 }
@@ -121,10 +121,10 @@ function createThinkingPreset() {
           [0, 1, 0]
         ]
       ],
-      fps: 4,
+      fps: 5,
       animationStyle: 'Fade',
-      color: '#6771FC',
-      glow: 0
+      color: '#FF52F1',
+      glow: 18
     }
   };
 }
@@ -162,10 +162,10 @@ function createCreatingPreset() {
           [0, 0, 1]
         ]
       ],
-      fps: 4,
+      fps: 5,
       animationStyle: 'Fade',
-      color: '#D66386',
-      glow: 0
+      color: '#8f33ff',
+      glow: 18
     }
   };
 }
@@ -208,10 +208,10 @@ function createPostingPreset() {
           [0, 0, 0]
         ]
       ],
-      fps: 4,
+      fps: 5,
       animationStyle: 'Fade',
-      color: '#33FFA7',
-      glow: 0
+      color: '#fe7920',
+      glow: 18
     }
   };
 }

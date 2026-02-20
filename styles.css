@@ -208,19 +208,6 @@ input[type='color'] {
   border-color: #2d2d2d;
 }
 
-.output {
-  margin: 4px 0 0;
-  min-height: 120px;
-  max-height: 180px;
-  overflow: auto;
-  background: #0a0a0a;
-  border: 1px solid #232323;
-  border-radius: 10px;
-  padding: 10px;
-  color: #adadad;
-  font-size: 0.82rem;
-}
-
 .preset-panel {
   border-top: 1px solid #222;
   margin-top: 2px;
@@ -364,4 +351,47 @@ input[type='color'] {
     border-top: 1px solid var(--panel-border);
     overflow: visible;
   }
+}
+
+
+.toast-container {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  gap: 8px;
+  z-index: 1000;
+  width: min(92vw, 460px);
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  border: 1px solid #2b2b2b;
+  border-radius: 10px;
+  background: #121212;
+  color: #ddd;
+  padding: 9px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  box-shadow: 0 10px 20px #0008;
+}
+
+.toast-error {
+  border-color: #4d2e2e;
+  color: #ffb4b4;
+}
+
+.toast-close {
+  width: auto;
+  min-width: 28px;
+  padding: 2px 8px;
+  border-radius: 7px;
+  border: 1px solid #323232;
+  background: #191919;
+  color: #d6d6d6;
+  line-height: 1;
 }

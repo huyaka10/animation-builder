@@ -56,7 +56,7 @@ const ui = {
   importJsonBtn: document.querySelector('#importJsonBtn'),
   importJsonInput: document.querySelector('#importJsonInput'),
   exportSvgBtn: document.querySelector('#exportSvgBtn'),
-  exportOutput: document.querySelector('#exportOutput'),
+  toastContainer: document.querySelector('#toastContainer'),
   captureModal: document.querySelector('#captureModal'),
   overwritePresetBtn: document.querySelector('#overwritePresetBtn'),
   createNewPresetBtn: document.querySelector('#createNewPresetBtn'),
@@ -98,7 +98,7 @@ function bindControls() {
   ui.deleteFrameBtn.addEventListener('click', () => {
     const deleted = deleteActiveFrame(state);
     if (!deleted) {
-      ui.exportOutput.textContent = 'Cannot delete the only frame.';
+      showToast('Cannot delete the only frame.', 'error');
       return;
     }
     persist();
@@ -223,7 +223,8 @@ function bindControls() {
   });
 
   ui.exportJsonBtn.addEventListener('click', () => {
-    exportAnimationJson(state, ui.exportOutput);
+    exportAnimationJson(state);
+    showToast('Animation JSON exported.');
   });
 
   ui.importJsonBtn.addEventListener('click', () => {
@@ -241,9 +242,9 @@ function bindControls() {
       resetPlayback(state);
       persist();
       refreshUi();
-      ui.exportOutput.textContent = 'Animation imported successfully.';
+      showToast('Animation imported successfully.');
     } catch (error) {
-      ui.exportOutput.textContent = error.message;
+      showToast(error.message, 'error');
     } finally {
       ui.importJsonInput.value = '';
     }
@@ -481,6 +482,37 @@ function getSelectedPreset() {
 
 function isPresetModified(preset) {
   return preset.id === state.selectedPresetId && !animationsEqual(state.animation, preset.animation);
+}
+
+
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+
+  const text = document.createElement('span');
+  text.textContent = message;
+
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'toast-close';
+  closeBtn.textContent = '×';
+  closeBtn.setAttribute('aria-label', 'Close notification');
+
+  let removed = false;
+  const remove = () => {
+    if (removed) {
+      return;
+    }
+    removed = true;
+    toast.remove();
+  };
+
+  closeBtn.addEventListener('click', remove);
+
+  toast.append(text, closeBtn);
+  ui.toastContainer.appendChild(toast);
+
+  setTimeout(remove, 3200);
 }
 
 function persist() {
