@@ -184,13 +184,7 @@
           ref: listRef,
           className: `timeline-list ${hoveredIndex !== null ? 'is-interacting' : ''}`,
           role: 'list',
-          onMouseLeave: () => setHoveredIndex(null),
-          onWheel: (event) => {
-            const list = listRef.current;
-            if (!list || list.scrollHeight <= list.clientHeight) return;
-            event.preventDefault();
-            list.scrollTop += event.deltaY;
-          }
+          onMouseLeave: () => setHoveredIndex(null)
         },
         ...timelineItems.map((item) => {
           if (item.type === 'separator') {
