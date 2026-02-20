@@ -28,7 +28,28 @@
     return `${day}.${month}.${year}`;
   };
 
-  const createCurrentMonthDefaults = () => [];
+  const createCurrentMonthDefaults = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+
+    return [
+      {
+        id: 'default-1',
+        title: 'Starter Version 01',
+        date: new Date(year, month, Math.max(1, now.getDate() - 1)).toISOString().slice(0, 10),
+        image:
+          'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80'
+      },
+      {
+        id: 'default-2',
+        title: 'Starter Version 02',
+        date: new Date(year, month, Math.max(1, now.getDate())).toISOString().slice(0, 10),
+        image:
+          'https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1600&q=80'
+      }
+    ];
+  };
 
   const DEFAULT_VERSIONS = createCurrentMonthDefaults();
 
@@ -277,28 +298,28 @@
     const [pendingDate, setPendingDate] = useState(new Date().toISOString().slice(0, 10));
 
     useEffect(() => {
+      const setFromDefaults = () => {
+        setVersions(DEFAULT_VERSIONS);
+        setActiveId(DEFAULT_VERSIONS.at(-1)?.id ?? null);
+      };
+
       const saved = localStorage.getItem(STORAGE_KEY);
       if (!saved) {
-        setVersions(DEFAULT_VERSIONS);
-        setActiveId(DEFAULT_VERSIONS[DEFAULT_VERSIONS.length - 1].id);
+        setFromDefaults();
         return;
       }
 
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
+        if (Array.isArray(parsed) && parsed.length > 0) {
           setVersions(parsed);
-          if (parsed.length > 0) {
-            const fallback = [...parsed].sort((a, b) => new Date(a.date) - new Date(b.date)).at(-1);
-            setActiveId(fallback.id);
-          }
+          const fallback = [...parsed].sort((a, b) => new Date(a.date) - new Date(b.date)).at(-1);
+          setActiveId(fallback?.id ?? null);
         } else {
-          setVersions(DEFAULT_VERSIONS);
-          setActiveId(DEFAULT_VERSIONS[DEFAULT_VERSIONS.length - 1].id);
+          setFromDefaults();
         }
       } catch (error) {
-        setVersions(DEFAULT_VERSIONS);
-        setActiveId(DEFAULT_VERSIONS[DEFAULT_VERSIONS.length - 1].id);
+        setFromDefaults();
       }
     }, []);
 
