@@ -144,6 +144,27 @@
       list.scrollTop = list.scrollHeight;
     }, [versions.length]);
 
+    const stabilizeHoverPosition = (element, index) => {
+      const list = listRef.current;
+      if (!list || !element) {
+        setHoveredIndex(index);
+        return;
+      }
+
+      const beforeTop = element.getBoundingClientRect().top;
+      const beforeScroll = list.scrollTop;
+      setHoveredIndex(index);
+
+      requestAnimationFrame(() => {
+        const afterTop = element.getBoundingClientRect().top;
+        const delta = afterTop - beforeTop;
+
+        if (delta > 0) {
+          list.scrollTop = Math.min(list.scrollHeight - list.clientHeight, beforeScroll + delta);
+        }
+      });
+    };
+
     const getWaveStrength = (index) => {
       if (hoveredIndex === null) return 0;
       const distance = Math.abs(hoveredIndex - index);
@@ -208,8 +229,8 @@
               role: 'listitem',
               'aria-label': `${version.title} - ${formatDisplayDate(version.date)}`,
               onClick: () => onSelect(version.id),
-              onMouseEnter: () => setHoveredIndex(item.index),
-              onFocus: () => setHoveredIndex(item.index),
+              onMouseEnter: (event) => stabilizeHoverPosition(event.currentTarget, item.index),
+              onFocus: (event) => stabilizeHoverPosition(event.currentTarget, item.index),
               onBlur: () => setHoveredIndex(null),
               style: {
                 '--wave-strength': waveStrength
