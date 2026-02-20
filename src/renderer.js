@@ -48,6 +48,8 @@ export function createRenderer(svg, state, onCellClick) {
           const rect = cells[row][col];
           const opacity = Number(displayFrame[row][col] ?? 0);
           const glow = Number(state.animation.glow ?? 0);
+          rect.setAttribute('stroke', state.previewRunning ? 'none' : '#11151d');
+          rect.setAttribute('stroke-width', state.previewRunning ? '0' : '1');
           if (opacity <= 0) {
             rect.dataset.active = '0';
             rect.setAttribute('fill', INACTIVE_CELL_COLOR);
