@@ -151,16 +151,37 @@
         return;
       }
 
-      const beforeTop = element.getBoundingClientRect().top;
+      const beforeRect = element.getBoundingClientRect();
+      const beforeTop = beforeRect.top;
+      const beforeBottom = beforeRect.bottom;
       const beforeScroll = list.scrollTop;
+      const beforeScrollHeight = list.scrollHeight;
+      const beforeClientHeight = list.clientHeight;
+      const wasNearBottom = beforeScroll >= beforeScrollHeight - beforeClientHeight - 2;
+
       setHoveredIndex(index);
 
       requestAnimationFrame(() => {
-        const afterTop = element.getBoundingClientRect().top;
-        const delta = afterTop - beforeTop;
+        const afterRect = element.getBoundingClientRect();
+        const afterTop = afterRect.top;
+        const afterBottom = afterRect.bottom;
 
-        if (delta > 0) {
-          list.scrollTop = Math.min(list.scrollHeight - list.clientHeight, beforeScroll + delta);
+        const topDelta = afterTop - beforeTop;
+        const bottomDelta = afterBottom - beforeBottom;
+        const downShift = Math.max(0, topDelta, bottomDelta);
+
+        if (wasNearBottom) {
+          list.scrollTop = list.scrollHeight - list.clientHeight;
+          setTimeout(() => {
+            const latestList = listRef.current;
+            if (!latestList) return;
+            latestList.scrollTop = latestList.scrollHeight - latestList.clientHeight;
+          }, 240);
+          return;
+        }
+
+        if (downShift > 0) {
+          list.scrollTop = Math.min(list.scrollHeight - list.clientHeight, beforeScroll + downShift);
         }
       });
     };
