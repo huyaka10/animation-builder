@@ -128,33 +128,12 @@
   function Timeline({ versions, activeId, onSelect }) {
     const [hoveredIndex, setHoveredIndex] = useState(null);
     const listRef = useRef(null);
-    const pointerXRef = useRef(0);
 
     useEffect(() => {
-      const handleMove = (event) => {
-        pointerXRef.current = event.clientX;
-      };
-
-      const handleWheel = (event) => {
-        const list = listRef.current;
-        if (!list) return;
-        const rightThreshold = window.innerWidth * 0.65;
-        if (pointerXRef.current < rightThreshold) return;
-
-        const hasScrollableSpace = list.scrollHeight > list.clientHeight;
-        if (!hasScrollableSpace) return;
-
-        event.preventDefault();
-        list.scrollTop += event.deltaY;
-      };
-
-      window.addEventListener('mousemove', handleMove);
-      window.addEventListener('wheel', handleWheel, { passive: false });
-      return () => {
-        window.removeEventListener('mousemove', handleMove);
-        window.removeEventListener('wheel', handleWheel);
-      };
-    }, []);
+      const list = listRef.current;
+      if (!list) return;
+      list.scrollTop = list.scrollHeight;
+    }, [versions.length]);
 
     const getWaveStrength = (index) => {
       if (hoveredIndex === null) return 0;
@@ -202,7 +181,13 @@
           ref: listRef,
           className: `timeline-list ${hoveredIndex !== null ? 'is-interacting' : ''}`,
           role: 'list',
-          onMouseLeave: () => setHoveredIndex(null)
+          onMouseLeave: () => setHoveredIndex(null),
+          onWheel: (event) => {
+            const list = listRef.current;
+            if (!list || list.scrollHeight <= list.clientHeight) return;
+            event.preventDefault();
+            list.scrollTop += event.deltaY;
+          }
         },
         ...timelineItems.map((item) => {
           if (item.type === 'separator') {
