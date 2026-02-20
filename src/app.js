@@ -75,6 +75,12 @@
   const DEFAULT_VERSIONS = createCurrentMonthDefaults();
 
 
+  const getLatestVersionId = (items) =>
+    [...items]
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+      .at(-1)?.id ?? null;
+
+
   function VersionStage({ versions, activeVersion, activeIndex }) {
     if (!activeVersion) {
       return h(
@@ -321,7 +327,7 @@
     useEffect(() => {
       const setFromDefaults = () => {
         setVersions(DEFAULT_VERSIONS);
-        setActiveId(DEFAULT_VERSIONS.at(-1)?.id ?? null);
+        setActiveId(getLatestVersionId(DEFAULT_VERSIONS));
       };
 
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -334,8 +340,7 @@
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
           setVersions(parsed);
-          const fallback = [...parsed].sort((a, b) => new Date(a.date) - new Date(b.date)).at(-1);
-          setActiveId(fallback?.id ?? null);
+          setActiveId(getLatestVersionId(parsed));
         } else {
           setFromDefaults();
         }
