@@ -1,5 +1,5 @@
 (() => {
-  const { useEffect, useMemo, useState, useRef } = React;
+  const { useEffect, useLayoutEffect, useMemo, useState, useRef } = React;
   const h = React.createElement;
   const STORAGE_KEY = 'site_versions';
 
@@ -137,6 +137,7 @@
   function Timeline({ versions, activeId, onSelect }) {
     const [hoveredIndex, setHoveredIndex] = useState(null);
     const listRef = useRef(null);
+    const pinBottomOnHoverRef = useRef(false);
 
     useEffect(() => {
       const list = listRef.current;
@@ -159,7 +160,10 @@
       const beforeClientHeight = list.clientHeight;
       const wasNearBottom = beforeScroll >= beforeScrollHeight - beforeClientHeight - 2;
 
+      pinBottomOnHoverRef.current = wasNearBottom;
       setHoveredIndex(index);
+
+      if (wasNearBottom) return;
 
       requestAnimationFrame(() => {
         const afterRect = element.getBoundingClientRect();
@@ -170,21 +174,29 @@
         const bottomDelta = afterBottom - beforeBottom;
         const downShift = Math.max(0, topDelta, bottomDelta);
 
-        if (wasNearBottom) {
-          list.scrollTop = list.scrollHeight - list.clientHeight;
-          setTimeout(() => {
-            const latestList = listRef.current;
-            if (!latestList) return;
-            latestList.scrollTop = latestList.scrollHeight - latestList.clientHeight;
-          }, 240);
-          return;
-        }
-
         if (downShift > 0) {
           list.scrollTop = Math.min(list.scrollHeight - list.clientHeight, beforeScroll + downShift);
         }
       });
     };
+
+    useLayoutEffect(() => {
+      if (!pinBottomOnHoverRef.current) return;
+      const list = listRef.current;
+      if (!list) return;
+
+      const endAt = performance.now() + 280;
+      let frameId = 0;
+      const pin = () => {
+        list.scrollTop = list.scrollHeight - list.clientHeight;
+        if (performance.now() < endAt && pinBottomOnHoverRef.current) {
+          frameId = requestAnimationFrame(pin);
+        }
+      };
+
+      pin();
+      return () => cancelAnimationFrame(frameId);
+    }, [hoveredIndex, versions.length]);
 
     const getWaveStrength = (index) => {
       if (hoveredIndex === null) return 0;
@@ -226,7 +238,10 @@
           ref: listRef,
           className: `timeline-list ${hoveredIndex !== null ? 'is-interacting' : ''}`,
           role: 'list',
-          onMouseLeave: () => setHoveredIndex(null)
+          onMouseLeave: () => {
+            pinBottomOnHoverRef.current = false;
+            setHoveredIndex(null);
+          }
         },
         ...timelineItems.map((item) => {
           if (item.type === 'separator') {
@@ -252,7 +267,10 @@
               onClick: () => onSelect(version.id),
               onMouseEnter: (event) => stabilizeHoverPosition(event.currentTarget, item.index),
               onFocus: (event) => stabilizeHoverPosition(event.currentTarget, item.index),
-              onBlur: () => setHoveredIndex(null),
+              onBlur: () => {
+                pinBottomOnHoverRef.current = false;
+                setHoveredIndex(null);
+              },
               style: {
                 '--wave-strength': waveStrength
               }
