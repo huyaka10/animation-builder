@@ -47,6 +47,27 @@
         date: new Date(year, month, Math.max(1, now.getDate())).toISOString().slice(0, 10),
         image:
           'https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1600&q=80'
+      },
+      {
+        id: 'default-3',
+        title: 'Starter Version 03',
+        date: new Date(year, month, Math.max(1, now.getDate() - 2)).toISOString().slice(0, 10),
+        image:
+          'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&w=1600&q=80'
+      },
+      {
+        id: 'default-4',
+        title: 'Starter Version 04',
+        date: new Date(year, month, Math.max(1, now.getDate() - 3)).toISOString().slice(0, 10),
+        image:
+          'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80'
+      },
+      {
+        id: 'default-5',
+        title: 'Starter Version 05',
+        date: new Date(year, month, Math.max(1, now.getDate() - 4)).toISOString().slice(0, 10),
+        image:
+          'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?auto=format&fit=crop&w=1600&q=80'
       }
     ];
   };
@@ -135,7 +156,7 @@
       const currentDate = new Date(version.date);
       const monthKey = `${currentDate.getFullYear()}-${currentDate.getMonth()}`;
 
-      if (monthKey !== previousMonthKey) {
+      if (previousMonthKey !== null && monthKey !== previousMonthKey) {
         const monthLabel = currentDate.toLocaleString('en-US', { month: 'long' });
         timelineItems.push({
           type: 'separator',
