@@ -43,6 +43,8 @@ const ui = {
   fpsValue: document.querySelector('#fpsValue'),
   styleSelect: document.querySelector('#styleSelect'),
   colorInput: document.querySelector('#colorInput'),
+  glowSlider: document.querySelector('#glowSlider'),
+  glowValue: document.querySelector('#glowValue'),
   previewToggle: document.querySelector('#previewToggle'),
   newAnimationBtn: document.querySelector('#newAnimationBtn'),
   capturePatternBtn: document.querySelector('#capturePatternBtn'),
@@ -153,6 +155,13 @@ function bindControls() {
 
   ui.colorInput.addEventListener('input', (event) => {
     state.animation.color = event.target.value;
+    persist();
+    refreshUi();
+  });
+
+  ui.glowSlider.addEventListener('input', (event) => {
+    state.animation.glow = Number(event.target.value);
+    ui.glowValue.textContent = String(state.animation.glow);
     persist();
     refreshUi();
   });
@@ -300,6 +309,8 @@ function refreshUi() {
   ui.fpsValue.textContent = String(state.animation.fps);
   ui.styleSelect.value = state.animation.animationStyle;
   ui.colorInput.value = state.animation.color;
+  ui.glowSlider.value = String(state.animation.glow ?? 0);
+  ui.glowValue.textContent = String(state.animation.glow ?? 0);
   ui.savePresetChangesBtn.disabled = !state.selectedPresetId;
   ui.previewToggle.textContent = state.previewRunning ? 'Pause Preview' : 'Start Preview';
   ui.activePresetLabel.textContent = getModeLabel();

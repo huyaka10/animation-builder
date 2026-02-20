@@ -12,6 +12,7 @@ export function saveProject(project) {
       fps: preset.animation.fps,
       animationStyle: preset.animation.animationStyle,
       color: preset.animation.color,
+      glow: Number(preset.animation.glow ?? 0),
       rows: preset.animation.frames[0]?.length ?? 0,
       cols: preset.animation.frames[0]?.[0]?.length ?? 0
     })),

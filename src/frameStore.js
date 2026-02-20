@@ -14,7 +14,8 @@ export function cloneAnimation(animation) {
     frames: animation.frames.map((frame) => cloneFrame(frame)),
     fps: animation.fps,
     animationStyle: animation.animationStyle,
-    color: animation.color
+    color: animation.color,
+    glow: Number(animation.glow ?? 0)
   };
 }
 
@@ -22,7 +23,7 @@ export function animationsEqual(a, b) {
   if (!a || !b) {
     return false;
   }
-  if (a.fps !== b.fps || a.animationStyle !== b.animationStyle || a.color !== b.color) {
+  if (a.fps !== b.fps || a.animationStyle !== b.animationStyle || a.color !== b.color || Number(a.glow ?? 0) !== Number(b.glow ?? 0)) {
     return false;
   }
   if (a.frames.length !== b.frames.length) {
@@ -86,7 +87,8 @@ function createAnalyzingPreset() {
       ],
       fps: 4,
       animationStyle: 'Fade',
-      color: '#FF8433'
+      color: '#FF8433',
+      glow: 0
     }
   };
 }
@@ -121,7 +123,8 @@ function createThinkingPreset() {
       ],
       fps: 4,
       animationStyle: 'Fade',
-      color: '#6771FC'
+      color: '#6771FC',
+      glow: 0
     }
   };
 }
@@ -161,7 +164,8 @@ function createCreatingPreset() {
       ],
       fps: 4,
       animationStyle: 'Fade',
-      color: '#D66386'
+      color: '#D66386',
+      glow: 0
     }
   };
 }
@@ -206,7 +210,8 @@ function createPostingPreset() {
       ],
       fps: 4,
       animationStyle: 'Fade',
-      color: '#33FFA7'
+      color: '#33FFA7',
+      glow: 0
     }
   };
 }
@@ -218,7 +223,8 @@ export function createInitialState() {
       frames: [createEmptyFrame(GRID_SIZE)],
       fps: 12,
       animationStyle: 'Binary',
-      color: DEFAULT_COLOR
+      color: DEFAULT_COLOR,
+      glow: 0
     },
     activeFrameIndex: 0,
     previewRunning: false,
@@ -309,6 +315,11 @@ export function normalizeAnimationPayload(payload) {
     return null;
   }
 
+  const glow = Number(payload.glow ?? 0);
+  if (!Number.isFinite(glow) || glow < 0 || glow > 30) {
+    return null;
+  }
+
   if (!Array.isArray(payload.frames) || payload.frames.length === 0) {
     return null;
   }
@@ -322,7 +333,8 @@ export function normalizeAnimationPayload(payload) {
     frames: normalizedFrames,
     fps,
     animationStyle: payload.animationStyle,
-    color: payload.color
+    color: payload.color,
+    glow
   };
 }
 

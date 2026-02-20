@@ -47,14 +47,17 @@ export function createRenderer(svg, state, onCellClick) {
         for (let col = 0; col < state.gridSize; col += 1) {
           const rect = cells[row][col];
           const opacity = Number(displayFrame[row][col] ?? 0);
+          const glow = Number(state.animation.glow ?? 0);
           if (opacity <= 0) {
             rect.dataset.active = '0';
             rect.setAttribute('fill', INACTIVE_CELL_COLOR);
             rect.setAttribute('fill-opacity', state.previewRunning ? '0' : '1');
+            rect.style.filter = 'none';
           } else {
             rect.dataset.active = '1';
             rect.setAttribute('fill', state.animation.color);
             rect.setAttribute('fill-opacity', String(opacity));
+            rect.style.filter = glow > 0 ? `drop-shadow(0 0 ${glow}px ${state.animation.color})` : 'none';
           }
         }
       }

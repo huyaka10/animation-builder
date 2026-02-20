@@ -5,7 +5,8 @@ export function exportAnimationJson(state, outputEl) {
     frames: state.animation.frames,
     fps: state.animation.fps,
     animationStyle: state.animation.animationStyle,
-    color: state.animation.color
+    color: state.animation.color,
+    glow: Number(state.animation.glow ?? 0)
   };
   outputEl.textContent = JSON.stringify(payload, null, 2);
   downloadText(JSON.stringify(payload, null, 2), 'animation.json', 'application/json');
@@ -52,6 +53,7 @@ export function exportStandaloneSvg(state) {
     fps: state.animation.fps,
     animationStyle: state.animation.animationStyle,
     color: state.animation.color,
+    glow: Number(state.animation.glow ?? 0),
     gridSize
   };
 
@@ -69,6 +71,7 @@ export function exportStandaloneSvg(state) {
       const fps = animation.fps;
       const style = animation.animationStyle;
       const color = animation.color;
+      const glow = Number(animation.glow || 0);
       const frameDuration = 1000 / fps;
       let last = performance.now();
       let accumulator = 0;
@@ -100,6 +103,7 @@ export function exportStandaloneSvg(state) {
           const b = frames[current][r][c] ? 1 : 0;
           const value = style === 'Binary' ? b : Number((a * (1 - blend) + b * blend).toFixed(3));
           cell.setAttribute('fill-opacity', String(value));
+          cell.style.filter = value > 0 && glow > 0 ? 'drop-shadow(0 0 ' + glow + 'px ' + color + ')' : 'none';
         }
 
         requestAnimationFrame(loop);
