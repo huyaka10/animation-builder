@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SVGator Runtime Remover</title>
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+    main {
+      max-width: 960px;
+      margin: 32px auto;
+      padding: 0 16px 32px;
+    }
+    h1 { margin-bottom: 12px; }
+    p { color: #cbd5e1; }
+    .panel {
+      background: #111827;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+    button, .button-like {
+      border: 1px solid #475569;
+      background: #1e293b;
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-block;
+    }
+    button:hover, .button-like:hover { background: #334155; }
+    input[type="file"] { max-width: 100%; }
+    textarea {
+      width: 100%;
+      min-height: 240px;
+      margin-top: 12px;
+      background: #020617;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .log {
+      white-space: pre-wrap;
+      color: #93c5fd;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>SVGator → автономный SVG</h1>
+    <p>Загрузите SVG из SVGator. Инструмент удалит встроенный runtime, оставит только необходимые элементы и добавит минимальный JS-движок анимации.</p>
+
+    <section class="panel">
+      <div class="row">
+        <input id="fileInput" type="file" accept=".svg,image/svg+xml" />
+        <button id="convertBtn" type="button">Конвертировать</button>
+        <a id="downloadLink" class="button-like" download="converted.svg" style="display:none">Скачать converted.svg</a>
+      </div>
+      <div id="log" class="log"></div>
+      <textarea id="output" readonly placeholder="Готовый SVG появится здесь..."></textarea>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
