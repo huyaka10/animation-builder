@@ -47,10 +47,14 @@
         gap: 8px;
         margin: 8px 0 12px;
       }
-      button {
+      button,
+      select {
         border: 1px solid #8f9db1;
         border-radius: 8px;
         padding: 8px 12px;
+      }
+
+      button {
         cursor: pointer;
       }
       .primary {
@@ -113,6 +117,11 @@
         <button id="stopBtn" type="button">⏹ Stop</button>
         <button id="exportBtn" class="primary" type="button">⬇ Экспортировать автономный SVG</button>
       </div>
+      <label class="hint" for="directionSelect">Режим проигрывания в экспортируемом SVG:</label>
+      <select id="directionSelect">
+        <option value="forward" selected>Как в Lottie (Forward)</option>
+        <option value="reverse">Обратный (Reverse)</option>
+      </select>
       <div class="hint">Экспорт создаёт покадровый автономный ВЕКТОРНЫЙ SVG (обычно заметно больше по размеру).</div>
       <div id="status">Ожидание файла…</div>
     </section>
@@ -134,6 +143,7 @@
       const pauseBtn = document.getElementById('pauseBtn');
       const stopBtn = document.getElementById('stopBtn');
       const exportBtn = document.getElementById('exportBtn');
+      const directionSelect = document.getElementById('directionSelect');
 
       let player = null;
       let loadedFileName = 'animation';
@@ -174,7 +184,7 @@
         return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       }
 
-      async function buildAutonomousSvg(animationData) {
+      async function buildAutonomousSvg(animationData, direction = "forward") {
         const tempContainer = document.createElement('div');
         renderSandbox.appendChild(tempContainer);
 
@@ -232,10 +242,12 @@
         ];
 
         const frameParts = [];
-        for (let i = 0; i < frameSvgs.length; i += 1) {
-          const delay = -(i * frameDuration);
+        const orderedFrames = direction === "reverse" ? [...frameSvgs].reverse() : frameSvgs;
+
+        for (let i = 0; i < orderedFrames.length; i += 1) {
+          const delay = i * frameDuration;
           cssParts.push(`.f${i}{animation-delay:${delay.toFixed(6)}s;}`);
-          frameParts.push(`<g class="f f${i}">${frameSvgs[i]}</g>`);
+          frameParts.push(`<g class="f f${i}">${orderedFrames[i]}</g>`);
         }
 
         return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">\n<style>${cssParts.join('')}</style>\n${frameParts.join('\n')}\n</svg>`;
@@ -296,7 +308,7 @@
         exportBtn.disabled = true;
         try {
           setStatus('Экспорт: подготовка автономного SVG…');
-          const animatedSvg = await buildAutonomousSvg(loadedAnimationData);
+          const animatedSvg = await buildAutonomousSvg(loadedAnimationData, directionSelect.value);
           const blob = new Blob([animatedSvg], { type: 'image/svg+xml;charset=utf-8' });
           const url = URL.createObjectURL(blob);
 
@@ -306,7 +318,7 @@
           link.click();
 
           URL.revokeObjectURL(url);
-          setStatus('Готово: автономный анимированный SVG экспортирован.');
+          setStatus(`Готово: автономный анимированный SVG экспортирован (${directionSelect.value === 'reverse' ? 'Reverse' : 'Forward'}).`);
         } catch (error) {
           setStatus('Ошибка экспорта: ' + error.message, true);
         } finally {
