@@ -57,7 +57,7 @@
         <input id="flipVerticalToggle" type="checkbox" checked />
         Флип по вертикали (как в превью и в экспорте)
       </label>
-      <div class="hint">Экспорт создаёт покадровый автономный ВЕКТОРНЫЙ SVG (обычно заметно больше по размеру).</div>
+      <div class="hint">Экспорт создаёт покадровый автономный ВЕКТОРНЫЙ SVG 320×320px (обычно заметно больше по размеру).</div>
       <div id="status">Ожидание файла…</div>
     </section>
 
@@ -84,6 +84,7 @@
       let player = null;
       let loadedFileName = 'animation';
       let loadedAnimationData = null;
+      const EXPORT_SIZE_PX = 320;
 
       function setStatus(message, isError = false) {
         statusNode.textContent = message;
@@ -195,7 +196,7 @@
           ? `<g transform="translate(0 ${height}) scale(1 -1)">\n${animationMarkup}\n</g>`
           : animationMarkup;
 
-        return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">\n<style>${cssParts.join('')}</style>\n${flippedMarkup}\n</svg>`;
+        return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${EXPORT_SIZE_PX}px" height="${EXPORT_SIZE_PX}px" viewBox="0 0 ${width} ${height}">\n<style>${cssParts.join('')}</style>\n${flippedMarkup}\n</svg>`;
       }
 
       async function handleFile(file) {
