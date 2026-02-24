@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lottie JSON → SVG конвертер</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+
+      body {
+        font-family: Inter, Arial, sans-serif;
+        max-width: 960px;
+        margin: 24px auto;
+        padding: 0 16px 32px;
+      }
+
+      h1 {
+        margin-bottom: 8px;
+      }
+
+      p {
+        opacity: 0.9;
+      }
+
+      .drop-zone {
+        border: 2px dashed #7f8ea3;
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+        margin: 16px 0;
+        transition: 0.2s border-color ease;
+      }
+
+      .drop-zone.dragover {
+        border-color: #3b82f6;
+      }
+
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 8px 0 16px;
+      }
+
+      button {
+        border: 1px solid #8f9db1;
+        border-radius: 8px;
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+
+      #status {
+        min-height: 20px;
+        margin: 8px 0;
+      }
+
+      #preview {
+        min-height: 280px;
+        border: 1px solid #d0d7e2;
+        border-radius: 12px;
+        padding: 12px;
+        display: grid;
+        place-items: center;
+      }
+
+      #preview svg {
+        max-width: 100%;
+        height: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Lottie JSON → SVG (анимированный)</h1>
+    <p>Загрузите файл .json, просмотрите анимацию и экспортируйте текущий SVG.</p>
+
+    <label class="drop-zone" id="dropZone">
+      Перетащите Lottie JSON сюда или выберите файл:<br /><br />
+      <input id="fileInput" type="file" accept=".json,application/json" />
+    </label>
+
+    <div class="toolbar">
+      <button id="playBtn" type="button">▶ Play</button>
+      <button id="pauseBtn" type="button">⏸ Pause</button>
+      <button id="stopBtn" type="button">⏹ Stop</button>
+      <button id="exportBtn" type="button">⬇ Экспорт SVG</button>
+    </div>
+
+    <div id="status">Ожидание файла…</div>
+    <div id="preview"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
+    <script>
+      const dropZone = document.getElementById('dropZone');
+      const fileInput = document.getElementById('fileInput');
+      const preview = document.getElementById('preview');
+      const statusNode = document.getElementById('status');
+
+      const playBtn = document.getElementById('playBtn');
+      const pauseBtn = document.getElementById('pauseBtn');
+      const stopBtn = document.getElementById('stopBtn');
+      const exportBtn = document.getElementById('exportBtn');
+
+      let player = null;
+      let loadedFileName = 'animation';
+
+      function setStatus(message, isError = false) {
+        statusNode.textContent = message;
+        statusNode.style.color = isError ? '#dc2626' : '';
+      }
+
+      function clearPlayer() {
+        if (player) {
+          player.destroy();
+          player = null;
+        }
+        preview.innerHTML = '';
+      }
+
+      function loadLottie(animationData) {
+        clearPlayer();
+        player = lottie.loadAnimation({
+          container: preview,
+          renderer: 'svg',
+          loop: true,
+          autoplay: true,
+          animationData,
+        });
+        setStatus('Анимация загружена. Можно экспортировать SVG.');
+      }
+
+      async function handleFile(file) {
+        try {
+          loadedFileName = file.name.replace(/\.json$/i, '') || 'animation';
+          const text = await file.text();
+          const data = JSON.parse(text);
+          loadLottie(data);
+        } catch (error) {
+          clearPlayer();
+          setStatus('Не удалось загрузить JSON: ' + error.message, true);
+        }
+      }
+
+      fileInput.addEventListener('change', (event) => {
+        const file = event.target.files?.[0];
+        if (file) {
+          handleFile(file);
+        }
+      });
+
+      dropZone.addEventListener('dragover', (event) => {
+        event.preventDefault();
+        dropZone.classList.add('dragover');
+      });
+
+      dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+      });
+
+      dropZone.addEventListener('drop', (event) => {
+        event.preventDefault();
+        dropZone.classList.remove('dragover');
+        const file = event.dataTransfer.files?.[0];
+        if (file) {
+          handleFile(file);
+        }
+      });
+
+      playBtn.addEventListener('click', () => player?.play());
+      pauseBtn.addEventListener('click', () => player?.pause());
+      stopBtn.addEventListener('click', () => player?.stop());
+
+      exportBtn.addEventListener('click', () => {
+        const svg = preview.querySelector('svg');
+        if (!svg) {
+          setStatus('Сначала загрузите Lottie JSON файл.', true);
+          return;
+        }
+
+        const clone = svg.cloneNode(true);
+        clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        const source = '<?xml version="1.0" encoding="UTF-8"?>\n' + clone.outerHTML;
+        const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${loadedFileName}.svg`;
+        link.click();
+
+        URL.revokeObjectURL(url);
+        setStatus('SVG экспортирован.');
+      });
+    </script>
+  </body>
+</html>
