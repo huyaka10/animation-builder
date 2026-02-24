@@ -1,42 +1,48 @@
 # lottie2svg (MVP)
 
-CLI-утилита на Node.js + TypeScript для конвертации Lottie JSON (Bodymovin) в self-contained SVG.
+Browser-first конвертер Lottie JSON (Bodymovin) в self-contained animated SVG.
 
-## Возможности MVP
+## Что поддерживает MVP
 
-- Поддержка: shape layer, group, path, rectangle, ellipse (через path), trim paths, transform, opacity.
+- Shape layer pipeline: `shape`, `group`, `path`, `rectangle`, `ellipse` (через path), `trim paths`, `transform`, `opacity`.
 - Анимация trim paths через `stroke-dasharray` + `stroke-dashoffset`.
-- Режимы анимации: `--mode=smil` (по умолчанию) и `--mode=css`.
-- Предупреждения для неподдерживаемых фич (без падения).
-- Модульная архитектура: `parser/`, `converters/`, `generators/`.
+- Режимы анимации: `smil` (по умолчанию) и `css`.
+- Неподдерживаемые возможности не ломают выполнение: выводятся warning-сообщения.
 
-## Использование
+## Архитектура (сохранена)
 
-```bash
-npm install
-npm run build
-npx lottie2svg input.json output.svg --mode=smil --pretty
+- `src/parser` — парсинг/валидация Lottie.
+- `src/converters` — shape/transform/trim преобразования.
+- `src/generators` — SVG + SMIL/CSS аниматоры.
+- `src/index.ts` — публичный API `convertLottieToSvg()`.
+
+## API
+
+```ts
+import { convertLottieToSvg } from './src/index';
+
+const svg = convertLottieToSvg(lottieJsonStringOrObject, {
+  mode: 'smil',
+  pretty: true,
+  optimize: false,
+});
 ```
 
-Флаги:
+## Browser UI (без сервера рантайма)
 
-- `--mode=smil|css`
-- `--pretty`
-- `--optimize`
+Добавлен `index.html`:
+- file input для Lottie JSON,
+- кнопка Convert,
+- вывод готового SVG (markup + preview).
 
-## Архитектура
+После сборки Vite создаёт статические файлы (`dist/`), которые можно открыть как обычные файлы.
 
-- `src/parser` — изолированный разбор Lottie JSON/объекта.
-- `src/converters/shape.ts` — path/rect/ellipse -> SVG path.
-- `src/converters/transform.ts` — transform + opacity.
-- `src/converters/trim.ts` — trim paths -> dasharray/dashoffset.
-- `src/generators/smil-animator.ts` — SMIL анимации.
-- `src/generators/css-animator.ts` — CSS keyframes.
-- `src/generators/svg-builder.ts` — сборка итогового SVG.
-
-## Пример
+## Команды
 
 ```bash
+npm run dev
 npm run build
-node dist/cli.js examples/trim-sample.json out.svg --mode=smil --pretty
+npm run preview
+npm run check
+npm run test
 ```

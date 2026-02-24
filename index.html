@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lottie to SVG Converter</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 24px; }
+      .controls { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+      textarea { width: 100%; min-height: 120px; }
+      #svgOutput { border: 1px solid #ddd; padding: 12px; min-height: 200px; overflow: auto; }
+      .error { color: #b00020; }
+    </style>
+  </head>
+  <body>
+    <h1>Lottie → Animated SVG</h1>
+    <div class="controls">
+      <input id="fileInput" type="file" accept="application/json,.json" />
+      <select id="mode">
+        <option value="smil">SMIL</option>
+        <option value="css">CSS</option>
+      </select>
+      <button id="convertBtn" type="button">Convert</button>
+    </div>
+    <p id="status"></p>
+    <h2>SVG Markup</h2>
+    <textarea id="svgText" readonly></textarea>
+    <h2>Preview</h2>
+    <div id="svgOutput"></div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

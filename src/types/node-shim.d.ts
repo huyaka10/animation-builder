@@ -12,12 +12,3 @@ declare module 'node:assert' {
     ok(value: unknown, message?: string): void;
   };
 }
-
-declare const process: {
-  argv: string[];
-};
-
-declare const console: {
-  log(message: string): void;
-  warn(message: string): void;
-};

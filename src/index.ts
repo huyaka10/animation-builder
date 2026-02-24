@@ -1,14 +1,24 @@
 import { buildSvg } from './generators/svg-builder.js';
-import { parseLottieObject } from './parser/index.js';
+import { parseLottieFromJson, parseLottieObject } from './parser/index.js';
 import { ConverterOptions, LottieDocument, WarningCollector } from './types/lottie.js';
 import { ConsoleWarningCollector } from './utils/warnings.js';
 
-export function convertParsedLottieToSvg(input: LottieDocument, options: ConverterOptions, warnings: WarningCollector = new ConsoleWarningCollector()): string {
-  const parsed = parseLottieObject(input);
+const DEFAULT_OPTIONS: ConverterOptions = {
+  mode: 'smil',
+  pretty: true,
+  optimize: false,
+};
+
+export function convertLottieToSvg(
+  input: string | unknown,
+  options: Partial<ConverterOptions> = {},
+  warnings: WarningCollector = new ConsoleWarningCollector(),
+): string {
+  const parsed: LottieDocument = typeof input === 'string' ? parseLottieFromJson(input) : parseLottieObject(input);
+
   return buildSvg(parsed, {
-    mode: options.mode,
-    pretty: options.pretty,
-    optimize: options.optimize,
+    ...DEFAULT_OPTIONS,
+    ...options,
     warnings,
   });
 }

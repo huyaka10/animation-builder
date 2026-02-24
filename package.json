@@ -1,22 +1,20 @@
 {
   "name": "lottie2svg",
-  "version": "0.1.0",
-  "description": "CLI for converting Lottie JSON shape animations into self-contained animated SVG",
+  "version": "0.2.0",
+  "description": "Browser-first Lottie to self-contained animated SVG converter",
   "type": "module",
-  "bin": {
-    "lottie2svg": "dist/cli.js"
-  },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "start": "node dist/cli.js",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "check": "tsc --noEmit",
-    "test": "npm run check && node dist-test/smoke-test.js",
-    "test:build": "tsc -p tsconfig.test.json"
+    "test": "tsc -p tsconfig.test.json && node dist-test/test/smoke-test.js"
   },
-  "keywords": ["lottie", "svg", "animation", "cli"],
+  "keywords": ["lottie", "svg", "animation", "browser", "vite"],
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^22.10.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vite": "^5.4.11"
   }
 }
