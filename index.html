@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SVG Animation Builder – Timeline Edition</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="app" class="app-shell">
+      <main class="stage-wrap">
+        <h1>Animation Builder · Timeline</h1>
+        <div id="activePresetLabel" class="active-preset-label">Draft</div>
+        <section class="stage-card">
+          <svg id="stage" viewBox="0 0 520 520" aria-label="3 by 3 animation grid"></svg>
+        </section>
+
+        <section class="timeline-panel">
+          <div class="timeline-actions">
+            <button id="addFrameBtn" class="btn" type="button">Add Frame</button>
+            <button id="duplicateFrameBtn" class="btn" type="button">Duplicate Frame</button>
+            <button id="deleteFrameBtn" class="btn btn-danger" type="button">Delete Frame</button>
+          </div>
+          <ul id="timelineList" class="timeline-list" aria-label="Animation frames"></ul>
+        </section>
+      </main>
+
+      <aside class="panel">
+        <h2>Settings</h2>
+
+        <div class="field"><span id="frameInfo">Frame 1 / 1</span></div>
+
+        <label class="field">
+          <span>Speed (FPS): <strong id="fpsValue">12</strong></span>
+          <input id="fpsSlider" type="range" min="1" max="60" value="12" />
+        </label>
+
+        <label class="field">
+          <span>Animation Style</span>
+          <select id="styleSelect">
+            <option value="Binary">Binary</option>
+            <option value="Fade">Fade</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Color</span>
+          <input id="colorInput" type="color" value="#5ca7ff" />
+        </label>
+
+        <label class="field">
+          <span>Glow: <strong id="glowValue">0</strong></span>
+          <input id="glowSlider" type="range" min="0" max="30" value="0" />
+        </label>
+
+        <button id="previewToggle" class="btn">Start Preview</button>
+
+        <section class="preset-panel">
+          <h3>Presets</h3>
+          <div class="preset-actions">
+            <button id="newAnimationBtn" class="btn" type="button">New Animation</button>
+            <button id="capturePatternBtn" class="btn" type="button">Capture Pattern</button>
+            <button id="savePresetChangesBtn" class="btn btn-primary" type="button">Save Changes</button>
+            <button id="presetToggleBtn" class="btn" type="button">Show Presets</button>
+          </div>
+          <div id="presetListWrap" class="preset-list-wrap hidden">
+            <ul id="presetList" class="preset-list" aria-label="Saved presets"></ul>
+          </div>
+        </section>
+
+        <button id="exportJsonBtn" class="btn btn-primary">Export JSON</button>
+        <button id="importJsonBtn" class="btn" type="button">Import JSON</button>
+        <input id="importJsonInput" type="file" accept="application/json" hidden />
+        <button id="exportSvgBtn" class="btn">Export SVG</button>
+
+      </aside>
+    </div>
+
+    <dialog id="captureModal" class="capture-modal">
+      <h3>Preset action</h3>
+      <p>Overwrite current preset or create new?</p>
+      <div class="capture-modal-actions">
+        <button id="overwritePresetBtn" class="btn btn-primary" type="button">Overwrite current</button>
+        <button id="createNewPresetBtn" class="btn" type="button">Create new</button>
+        <button id="cancelPresetBtn" class="btn" type="button">Cancel</button>
+      </div>
+    </dialog>
+
+    <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>
