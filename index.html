@@ -113,7 +113,7 @@
         <button id="stopBtn" type="button">⏹ Stop</button>
         <button id="exportBtn" class="primary" type="button">⬇ Экспортировать автономный SVG</button>
       </div>
-      <div class="hint">Экспорт создаёт покадровый автономный SVG (обычно заметно больше по размеру).</div>
+      <div class="hint">Экспорт создаёт покадровый автономный ВЕКТОРНЫЙ SVG (обычно заметно больше по размеру).</div>
       <div id="status">Ожидание файла…</div>
     </section>
 
@@ -174,21 +174,6 @@
         return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       }
 
-      function bytesToBase64(bytes) {
-        const chunkSize = 0x8000;
-        let binary = '';
-        for (let i = 0; i < bytes.length; i += chunkSize) {
-          const chunk = bytes.subarray(i, i + chunkSize);
-          binary += String.fromCharCode.apply(null, chunk);
-        }
-        return btoa(binary);
-      }
-
-      function svgTextToDataUri(svgText) {
-        const bytes = new TextEncoder().encode(svgText);
-        return `data:image/svg+xml;base64,${bytesToBase64(bytes)}`;
-      }
-
       async function buildAutonomousSvg(animationData) {
         const tempContainer = document.createElement('div');
         renderSandbox.appendChild(tempContainer);
@@ -211,7 +196,7 @@
         const totalFrames = Math.max(1, Math.round(outPoint - inPoint));
         const durationSec = totalFrames / frameRate;
 
-        const frameUris = [];
+        const frameSvgs = [];
         for (let i = 0; i < totalFrames; i += 1) {
           tempPlayer.goToAndStop(i, true);
           await nextFrame();
@@ -223,8 +208,12 @@
 
           const clone = frameSvg.cloneNode(true);
           clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-          const frameText = `<?xml version="1.0" encoding="UTF-8"?>\n${clone.outerHTML}`;
-          frameUris.push(svgTextToDataUri(frameText));
+          clone.setAttribute('x', '0');
+          clone.setAttribute('y', '0');
+          clone.setAttribute('width', String(width));
+          clone.setAttribute('height', String(height));
+          clone.setAttribute('viewBox', `0 0 ${width} ${height}`);
+          frameSvgs.push(clone.outerHTML);
 
           if (i === 0 || i === totalFrames - 1 || i % 10 === 0) {
             setStatus(`Экспорт: подготовка кадров ${i + 1}/${totalFrames}…`);
@@ -242,16 +231,14 @@
           `@keyframes showFrame{0%,${visiblePercent}%{opacity:1;}${visiblePercent}% ,100%{opacity:0;}}`,
         ];
 
-        const imageParts = [];
-        for (let i = 0; i < frameUris.length; i += 1) {
+        const frameParts = [];
+        for (let i = 0; i < frameSvgs.length; i += 1) {
           const delay = -(i * frameDuration);
           cssParts.push(`.f${i}{animation-delay:${delay.toFixed(6)}s;}`);
-          imageParts.push(
-            `<image class="f f${i}" x="0" y="0" width="${width}" height="${height}" href="${frameUris[i]}" />`,
-          );
+          frameParts.push(`<g class="f f${i}">${frameSvgs[i]}</g>`);
         }
 
-        return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">\n<style>${cssParts.join('')}</style>\n${imageParts.join('\n')}\n</svg>`;
+        return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">\n<style>${cssParts.join('')}</style>\n${frameParts.join('\n')}\n</svg>`;
       }
 
       async function handleFile(file) {
