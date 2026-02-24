@@ -8,34 +8,28 @@
       :root {
         color-scheme: light dark;
       }
-
       body {
         font-family: Inter, Arial, sans-serif;
         max-width: 960px;
         margin: 24px auto;
         padding: 0 16px 32px;
       }
-
       h1 {
         margin-bottom: 8px;
       }
-
       p {
         opacity: 0.9;
       }
-
       .panel {
         border: 1px solid #d0d7e2;
         border-radius: 12px;
         padding: 16px;
         margin: 14px 0;
       }
-
       .panel h2 {
         margin: 0 0 10px;
         font-size: 1.05rem;
       }
-
       .drop-zone {
         border: 2px dashed #7f8ea3;
         border-radius: 12px;
@@ -44,41 +38,35 @@
         margin: 8px 0;
         transition: 0.2s border-color ease;
       }
-
       .drop-zone.dragover {
         border-color: #3b82f6;
       }
-
       .toolbar {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
         margin: 8px 0 12px;
       }
-
       button {
         border: 1px solid #8f9db1;
         border-radius: 8px;
         padding: 8px 12px;
         cursor: pointer;
       }
-
       .primary {
         background: #2563eb;
         color: #fff;
         border-color: #1d4ed8;
       }
-
-      .file-name {
+      .file-name,
+      .hint {
         font-size: 0.92rem;
         opacity: 0.9;
       }
-
       #status {
         min-height: 20px;
         margin: 8px 0;
       }
-
       #preview {
         min-height: 280px;
         border: 1px solid #d0d7e2;
@@ -87,16 +75,24 @@
         display: grid;
         place-items: center;
       }
-
       #preview svg {
         max-width: 100%;
         height: auto;
       }
+      #renderSandbox {
+        position: fixed;
+        inset: auto auto -99999px -99999px;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        opacity: 0;
+        pointer-events: none;
+      }
     </style>
   </head>
   <body>
-    <h1>Lottie JSON → SVG (анимированный)</h1>
-    <p>Шаг 1: импортируйте Lottie JSON. Шаг 2: нажмите «Экспортировать в SVG».</p>
+    <h1>Lottie JSON → SVG (автономный анимированный SVG)</h1>
+    <p>Шаг 1: импортируйте Lottie JSON. Шаг 2: нажмите экспорт — получите SVG без внешнего JS.</p>
 
     <section class="panel" aria-label="Импорт Lottie JSON">
       <h2>1) Импорт Lottie JSON</h2>
@@ -115,12 +111,14 @@
         <button id="playBtn" type="button">▶ Play</button>
         <button id="pauseBtn" type="button">⏸ Pause</button>
         <button id="stopBtn" type="button">⏹ Stop</button>
-        <button id="exportBtn" class="primary" type="button">⬇ Экспортировать в SVG</button>
+        <button id="exportBtn" class="primary" type="button">⬇ Экспортировать автономный SVG</button>
       </div>
+      <div class="hint">Экспорт создаёт покадровый автономный SVG (обычно заметно больше по размеру).</div>
       <div id="status">Ожидание файла…</div>
     </section>
 
     <div id="preview" aria-label="Предпросмотр"></div>
+    <div id="renderSandbox" aria-hidden="true"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
     <script>
@@ -130,6 +128,7 @@
       const fileNameNode = document.getElementById('fileName');
       const preview = document.getElementById('preview');
       const statusNode = document.getElementById('status');
+      const renderSandbox = document.getElementById('renderSandbox');
 
       const playBtn = document.getElementById('playBtn');
       const pauseBtn = document.getElementById('pauseBtn');
@@ -138,6 +137,7 @@
 
       let player = null;
       let loadedFileName = 'animation';
+      let loadedAnimationData = null;
 
       function setStatus(message, isError = false) {
         statusNode.textContent = message;
@@ -161,7 +161,97 @@
           autoplay: true,
           animationData,
         });
-        setStatus('Анимация загружена. Можно нажать «Экспортировать в SVG».');
+        setStatus('Анимация загружена. Можно нажать «Экспортировать автономный SVG».');
+      }
+
+      function waitForAnimationEvent(animation, eventName) {
+        return new Promise((resolve) => {
+          animation.addEventListener(eventName, resolve, { once: true });
+        });
+      }
+
+      function nextFrame() {
+        return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      }
+
+      function bytesToBase64(bytes) {
+        const chunkSize = 0x8000;
+        let binary = '';
+        for (let i = 0; i < bytes.length; i += chunkSize) {
+          const chunk = bytes.subarray(i, i + chunkSize);
+          binary += String.fromCharCode.apply(null, chunk);
+        }
+        return btoa(binary);
+      }
+
+      function svgTextToDataUri(svgText) {
+        const bytes = new TextEncoder().encode(svgText);
+        return `data:image/svg+xml;base64,${bytesToBase64(bytes)}`;
+      }
+
+      async function buildAutonomousSvg(animationData) {
+        const tempContainer = document.createElement('div');
+        renderSandbox.appendChild(tempContainer);
+
+        const tempPlayer = lottie.loadAnimation({
+          container: tempContainer,
+          renderer: 'svg',
+          loop: false,
+          autoplay: false,
+          animationData,
+        });
+
+        await waitForAnimationEvent(tempPlayer, 'DOMLoaded');
+
+        const width = Number(animationData.w) || 512;
+        const height = Number(animationData.h) || 512;
+        const frameRate = Number(animationData.fr) || 30;
+        const inPoint = Number(animationData.ip) || 0;
+        const outPoint = Number(animationData.op) || tempPlayer.totalFrames || 1;
+        const totalFrames = Math.max(1, Math.round(outPoint - inPoint));
+        const durationSec = totalFrames / frameRate;
+
+        const frameUris = [];
+        for (let i = 0; i < totalFrames; i += 1) {
+          tempPlayer.goToAndStop(i, true);
+          await nextFrame();
+
+          const frameSvg = tempContainer.querySelector('svg');
+          if (!frameSvg) {
+            throw new Error('Не удалось получить SVG кадр.');
+          }
+
+          const clone = frameSvg.cloneNode(true);
+          clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+          const frameText = `<?xml version="1.0" encoding="UTF-8"?>\n${clone.outerHTML}`;
+          frameUris.push(svgTextToDataUri(frameText));
+
+          if (i === 0 || i === totalFrames - 1 || i % 10 === 0) {
+            setStatus(`Экспорт: подготовка кадров ${i + 1}/${totalFrames}…`);
+          }
+        }
+
+        tempPlayer.destroy();
+        tempContainer.remove();
+
+        const visiblePercent = (100 / totalFrames).toFixed(6);
+        const frameDuration = durationSec / totalFrames;
+
+        const cssParts = [
+          `.f{opacity:0;animation:showFrame ${durationSec.toFixed(6)}s linear infinite;}`,
+          `@keyframes showFrame{0%,${visiblePercent}%{opacity:1;}${visiblePercent}% ,100%{opacity:0;}}`,
+        ];
+
+        const imageParts = [];
+        for (let i = 0; i < frameUris.length; i += 1) {
+          const delay = -(i * frameDuration);
+          cssParts.push(`.f${i}{animation-delay:${delay.toFixed(6)}s;}`);
+          imageParts.push(
+            `<image class="f f${i}" x="0" y="0" width="${width}" height="${height}" href="${frameUris[i]}" />`,
+          );
+        }
+
+        return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">\n<style>${cssParts.join('')}</style>\n${imageParts.join('\n')}\n</svg>`;
       }
 
       async function handleFile(file) {
@@ -169,9 +259,10 @@
           loadedFileName = file.name.replace(/\.json$/i, '') || 'animation';
           fileNameNode.textContent = `Выбран файл: ${file.name}`;
           const text = await file.text();
-          const data = JSON.parse(text);
-          loadLottie(data);
+          loadedAnimationData = JSON.parse(text);
+          loadLottie(loadedAnimationData);
         } catch (error) {
+          loadedAnimationData = null;
           clearPlayer();
           fileNameNode.textContent = 'Файл не выбран';
           setStatus('Не удалось загрузить JSON: ' + error.message, true);
@@ -209,26 +300,31 @@
       pauseBtn.addEventListener('click', () => player?.pause());
       stopBtn.addEventListener('click', () => player?.stop());
 
-      exportBtn.addEventListener('click', () => {
-        const svg = preview.querySelector('svg');
-        if (!svg) {
+      exportBtn.addEventListener('click', async () => {
+        if (!loadedAnimationData) {
           setStatus('Сначала нажмите «Импортировать JSON».', true);
           return;
         }
 
-        const clone = svg.cloneNode(true);
-        clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-        const source = '<?xml version="1.0" encoding="UTF-8"?>\n' + clone.outerHTML;
-        const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
+        exportBtn.disabled = true;
+        try {
+          setStatus('Экспорт: подготовка автономного SVG…');
+          const animatedSvg = await buildAutonomousSvg(loadedAnimationData);
+          const blob = new Blob([animatedSvg], { type: 'image/svg+xml;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
 
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${loadedFileName}.svg`;
-        link.click();
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `${loadedFileName}-autonomous.svg`;
+          link.click();
 
-        URL.revokeObjectURL(url);
-        setStatus('Готово: SVG экспортирован.');
+          URL.revokeObjectURL(url);
+          setStatus('Готово: автономный анимированный SVG экспортирован.');
+        } catch (error) {
+          setStatus('Ошибка экспорта: ' + error.message, true);
+        } finally {
+          exportBtn.disabled = false;
+        }
       });
     </script>
   </body>
