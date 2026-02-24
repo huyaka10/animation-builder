@@ -57,12 +57,13 @@
       <select id="exportModeSelect">
         <option value="css" selected>CSS покадрово (макс. совместимость)</option>
         <option value="js">Встроенный JS в SVG</option>
+        <option value="trim">Trim/Dash (экспериментально)</option>
       </select>
       <label class="hint" for="flipVerticalToggle">
         <input id="flipVerticalToggle" type="checkbox" checked />
         Флип по вертикали (как в превью и в экспорте)
       </label>
-      <div class="hint">Кадры в экспорте — это ВЕКТОРНЫЕ SVG-элементы (не PNG/JPG). Режим: CSS-кадры или встроенный JS. Размер: 320×320px.</div>
+      <div class="hint">Кадры в экспорте — это ВЕКТОРНЫЕ SVG-элементы (не PNG/JPG). Режим: CSS-кадры, встроенный JS или Trim/Dash. Размер: 320×320px.</div>
       <div id="status">Ожидание файла…</div>
     </section>
 
@@ -188,6 +189,58 @@
         let scriptMarkup = '';
         const frameParts = [];
 
+        if (animationMode === 'trim') {
+          const holder = document.createElement('div');
+          holder.innerHTML = orderedFrames[0] || '';
+          const sampleSvg = holder.querySelector('svg');
+          if (!sampleSvg) {
+            throw new Error('Trim-режим: не найден SVG для анализа.');
+          }
+
+          renderSandbox.appendChild(sampleSvg);
+          const geo = Array.from(sampleSvg.querySelectorAll('path,circle,ellipse,rect,line,polyline,polygon'));
+          const animated = [];
+
+          for (let i = 0; i < geo.length; i += 1) {
+            const el = geo[i];
+            const stroke = el.getAttribute('stroke');
+            const strokeWidth = Number(el.getAttribute('stroke-width') || 1);
+            if (!stroke || stroke === 'none' || strokeWidth <= 0) continue;
+            if (typeof el.getTotalLength !== 'function') continue;
+
+            let length = 0;
+            try {
+              length = el.getTotalLength();
+            } catch {
+              length = 0;
+            }
+            if (!Number.isFinite(length) || length <= 0.01) continue;
+
+            const cls = `trim-seg-${animated.length}`;
+            el.classList.add(cls);
+            animated.push({ cls, length: length.toFixed(3) });
+          }
+
+          const svgMarkup = sampleSvg.outerHTML;
+          sampleSvg.remove();
+
+          if (!animated.length) {
+            setStatus('Trim-режим: не найдено stroke-сегментов, fallback на CSS-кадры.', true);
+            animationMode = 'css';
+          } else {
+            const cssParts = [];
+            for (const seg of animated) {
+              const startOffset = direction === 'reverse' ? 0 : seg.length;
+              const endOffset = direction === 'reverse' ? seg.length : 0;
+              cssParts.push(`.${seg.cls}{stroke-dasharray:${seg.length};stroke-dashoffset:${startOffset};animation:${seg.cls}-anim ${durationSec.toFixed(6)}s linear infinite;}`);
+              cssParts.push(`@keyframes ${seg.cls}-anim{0%{stroke-dashoffset:${startOffset};}100%{stroke-dashoffset:${endOffset};}}`);
+            }
+            styleMarkup = `
+<style>${cssParts.join('')}</style>`;
+            frameParts.push(svgMarkup);
+          }
+        }
+
         if (animationMode === 'js') {
           for (let i = 0; i < orderedFrames.length; i += 1) {
             frameParts.push(`<g class="f" data-frame="${i}" style="display:${i === 0 ? 'inline' : 'none'}">${orderedFrames[i]}</g>`);
@@ -217,7 +270,7 @@
 <script><![CDATA[
 ${runtimeScript}
 ]]><\/script>`;
-        } else {
+        } else if (animationMode === 'css') {
           const visiblePercent = (100 / totalFrames).toFixed(6);
           const cssParts = [
             `.f{opacity:0;animation:showFrame ${durationSec.toFixed(6)}s linear infinite;}`,
@@ -310,7 +363,8 @@ ${flippedMarkup}${scriptMarkup}
           link.click();
 
           URL.revokeObjectURL(url);
-          setStatus(`Готово: экспортирован SVG (${exportModeSelect.value === 'js' ? 'Embedded JS' : 'CSS Frames'}, ${directionSelect.value === 'reverse' ? 'Reverse' : 'Forward'}, flip: ${flipVerticalToggle.checked ? 'on' : 'off'}).`);
+          const modeLabel = exportModeSelect.value === 'js' ? 'Embedded JS' : exportModeSelect.value === 'trim' ? 'Trim/Dash' : 'CSS Frames';
+          setStatus(`Готово: экспортирован SVG (${modeLabel}, ${directionSelect.value === 'reverse' ? 'Reverse' : 'Forward'}, flip: ${flipVerticalToggle.checked ? 'on' : 'off'}).`);
         } catch (error) {
           setStatus('Ошибка экспорта: ' + error.message, true);
         } finally {
