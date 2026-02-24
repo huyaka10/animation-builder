@@ -24,12 +24,24 @@
         opacity: 0.9;
       }
 
+      .panel {
+        border: 1px solid #d0d7e2;
+        border-radius: 12px;
+        padding: 16px;
+        margin: 14px 0;
+      }
+
+      .panel h2 {
+        margin: 0 0 10px;
+        font-size: 1.05rem;
+      }
+
       .drop-zone {
         border: 2px dashed #7f8ea3;
         border-radius: 12px;
         padding: 24px;
         text-align: center;
-        margin: 16px 0;
+        margin: 8px 0;
         transition: 0.2s border-color ease;
       }
 
@@ -41,7 +53,7 @@
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-        margin: 8px 0 16px;
+        margin: 8px 0 12px;
       }
 
       button {
@@ -49,6 +61,17 @@
         border-radius: 8px;
         padding: 8px 12px;
         cursor: pointer;
+      }
+
+      .primary {
+        background: #2563eb;
+        color: #fff;
+        border-color: #1d4ed8;
+      }
+
+      .file-name {
+        font-size: 0.92rem;
+        opacity: 0.9;
       }
 
       #status {
@@ -73,27 +96,38 @@
   </head>
   <body>
     <h1>Lottie JSON → SVG (анимированный)</h1>
-    <p>Загрузите файл .json, просмотрите анимацию и экспортируйте текущий SVG.</p>
+    <p>Шаг 1: импортируйте Lottie JSON. Шаг 2: нажмите «Экспортировать в SVG».</p>
 
-    <label class="drop-zone" id="dropZone">
-      Перетащите Lottie JSON сюда или выберите файл:<br /><br />
-      <input id="fileInput" type="file" accept=".json,application/json" />
-    </label>
+    <section class="panel" aria-label="Импорт Lottie JSON">
+      <h2>1) Импорт Lottie JSON</h2>
+      <label class="drop-zone" id="dropZone">
+        Перетащите JSON сюда или нажмите кнопку ниже
+        <br /><br />
+        <button id="importBtn" class="primary" type="button">📂 Импортировать JSON</button>
+        <input id="fileInput" type="file" accept=".json,application/json" hidden />
+      </label>
+      <div class="file-name" id="fileName">Файл не выбран</div>
+    </section>
 
-    <div class="toolbar">
-      <button id="playBtn" type="button">▶ Play</button>
-      <button id="pauseBtn" type="button">⏸ Pause</button>
-      <button id="stopBtn" type="button">⏹ Stop</button>
-      <button id="exportBtn" type="button">⬇ Экспорт SVG</button>
-    </div>
+    <section class="panel" aria-label="Экспорт SVG">
+      <h2>2) Экспорт SVG</h2>
+      <div class="toolbar">
+        <button id="playBtn" type="button">▶ Play</button>
+        <button id="pauseBtn" type="button">⏸ Pause</button>
+        <button id="stopBtn" type="button">⏹ Stop</button>
+        <button id="exportBtn" class="primary" type="button">⬇ Экспортировать в SVG</button>
+      </div>
+      <div id="status">Ожидание файла…</div>
+    </section>
 
-    <div id="status">Ожидание файла…</div>
-    <div id="preview"></div>
+    <div id="preview" aria-label="Предпросмотр"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
     <script>
       const dropZone = document.getElementById('dropZone');
+      const importBtn = document.getElementById('importBtn');
       const fileInput = document.getElementById('fileInput');
+      const fileNameNode = document.getElementById('fileName');
       const preview = document.getElementById('preview');
       const statusNode = document.getElementById('status');
 
@@ -127,20 +161,24 @@
           autoplay: true,
           animationData,
         });
-        setStatus('Анимация загружена. Можно экспортировать SVG.');
+        setStatus('Анимация загружена. Можно нажать «Экспортировать в SVG».');
       }
 
       async function handleFile(file) {
         try {
           loadedFileName = file.name.replace(/\.json$/i, '') || 'animation';
+          fileNameNode.textContent = `Выбран файл: ${file.name}`;
           const text = await file.text();
           const data = JSON.parse(text);
           loadLottie(data);
         } catch (error) {
           clearPlayer();
+          fileNameNode.textContent = 'Файл не выбран';
           setStatus('Не удалось загрузить JSON: ' + error.message, true);
         }
       }
+
+      importBtn.addEventListener('click', () => fileInput.click());
 
       fileInput.addEventListener('change', (event) => {
         const file = event.target.files?.[0];
@@ -174,7 +212,7 @@
       exportBtn.addEventListener('click', () => {
         const svg = preview.querySelector('svg');
         if (!svg) {
-          setStatus('Сначала загрузите Lottie JSON файл.', true);
+          setStatus('Сначала нажмите «Импортировать JSON».', true);
           return;
         }
 
@@ -190,7 +228,7 @@
         link.click();
 
         URL.revokeObjectURL(url);
-        setStatus('SVG экспортирован.');
+        setStatus('Готово: SVG экспортирован.');
       });
     </script>
   </body>
