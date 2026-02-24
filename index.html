@@ -53,11 +53,16 @@
         <option value="forward" selected>Как в Lottie (Forward)</option>
         <option value="reverse">Обратный (Reverse)</option>
       </select>
+      <label class="hint" for="exportModeSelect">Режим анимации в SVG:</label>
+      <select id="exportModeSelect">
+        <option value="css" selected>CSS покадрово (макс. совместимость)</option>
+        <option value="js">Встроенный JS в SVG</option>
+      </select>
       <label class="hint" for="flipVerticalToggle">
         <input id="flipVerticalToggle" type="checkbox" checked />
         Флип по вертикали (как в превью и в экспорте)
       </label>
-      <div class="hint">Экспорт создаёт покадровый автономный ВЕКТОРНЫЙ SVG 320×320px (обычно заметно больше по размеру).</div>
+      <div class="hint">Кадры в экспорте — это ВЕКТОРНЫЕ SVG-элементы (не PNG/JPG). Режим: CSS-кадры или встроенный JS. Размер: 320×320px.</div>
       <div id="status">Ожидание файла…</div>
     </section>
 
@@ -80,6 +85,7 @@
       const exportBtn = document.getElementById('exportBtn');
       const directionSelect = document.getElementById('directionSelect');
       const flipVerticalToggle = document.getElementById('flipVerticalToggle');
+      const exportModeSelect = document.getElementById('exportModeSelect');
 
       let player = null;
       let loadedFileName = 'animation';
@@ -126,7 +132,7 @@
         return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       }
 
-      async function buildAutonomousSvg(animationData, direction = 'forward', flipVertical = false) {
+      async function buildAutonomousSvg(animationData, direction = 'forward', flipVertical = false, animationMode = 'css') {
         const tempContainer = document.createElement('div');
         renderSandbox.appendChild(tempContainer);
 
@@ -175,28 +181,70 @@
         tempPlayer.destroy();
         tempContainer.remove();
 
-        const visiblePercent = (100 / totalFrames).toFixed(6);
         const frameDuration = durationSec / totalFrames;
-
-        const cssParts = [
-          `.f{opacity:0;animation:showFrame ${durationSec.toFixed(6)}s linear infinite;}`,
-          `@keyframes showFrame{0%,${visiblePercent}%{opacity:1;}${visiblePercent}% ,100%{opacity:0;}}`,
-        ];
-
         const orderedFrames = direction === 'reverse' ? [...frameSvgs].reverse() : frameSvgs;
+
+        let styleMarkup = '';
+        let scriptMarkup = '';
         const frameParts = [];
-        for (let i = 0; i < orderedFrames.length; i += 1) {
-          const delay = i * frameDuration;
-          cssParts.push(`.f${i}{animation-delay:${delay.toFixed(6)}s;}`);
-          frameParts.push(`<g class="f f${i}">${orderedFrames[i]}</g>`);
+
+        if (animationMode === 'js') {
+          for (let i = 0; i < orderedFrames.length; i += 1) {
+            frameParts.push(`<g class="f" data-frame="${i}" style="display:${i === 0 ? 'inline' : 'none'}">${orderedFrames[i]}</g>`);
+          }
+
+          const runtimeScript = `(() => {
+  const frames = Array.from(document.querySelectorAll('.f'));
+  if (!frames.length) return;
+  const frameDurationMs = ${(1000 / frameRate).toFixed(4)};
+  let index = 0;
+  let last = performance.now();
+  function show(idx){
+    for (let i = 0; i < frames.length; i += 1) frames[i].style.display = i === idx ? 'inline' : 'none';
+  }
+  function tick(now){
+    if (now - last >= frameDurationMs){
+      index = (index + 1) % frames.length;
+      show(index);
+      last = now;
+    }
+    requestAnimationFrame(tick);
+  }
+  show(0);
+  requestAnimationFrame(tick);
+})();`;
+          scriptMarkup = `
+<script><![CDATA[
+${runtimeScript}
+]]><\/script>`;
+        } else {
+          const visiblePercent = (100 / totalFrames).toFixed(6);
+          const cssParts = [
+            `.f{opacity:0;animation:showFrame ${durationSec.toFixed(6)}s linear infinite;}`,
+            `@keyframes showFrame{0%,${visiblePercent}%{opacity:1;}${visiblePercent}% ,100%{opacity:0;}}`,
+          ];
+
+          for (let i = 0; i < orderedFrames.length; i += 1) {
+            const delay = i * frameDuration;
+            cssParts.push(`.f${i}{animation-delay:${delay.toFixed(6)}s;}`);
+            frameParts.push(`<g class="f f${i}">${orderedFrames[i]}</g>`);
+          }
+
+          styleMarkup = `
+<style>${cssParts.join('')}</style>`;
         }
 
         const animationMarkup = frameParts.join('\n');
         const flippedMarkup = flipVertical
-          ? `<g transform="translate(0 ${height}) scale(1 -1)">\n${animationMarkup}\n</g>`
+          ? `<g transform="translate(0 ${height}) scale(1 -1)">
+${animationMarkup}
+</g>`
           : animationMarkup;
 
-        return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${EXPORT_SIZE_PX}px" height="${EXPORT_SIZE_PX}px" viewBox="0 0 ${width} ${height}">\n<style>${cssParts.join('')}</style>\n${flippedMarkup}\n</svg>`;
+        return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${EXPORT_SIZE_PX}px" height="${EXPORT_SIZE_PX}px" viewBox="0 0 ${width} ${height}">${styleMarkup}
+${flippedMarkup}${scriptMarkup}
+</svg>`;
       }
 
       async function handleFile(file) {
@@ -251,6 +299,7 @@
             loadedAnimationData,
             directionSelect.value,
             flipVerticalToggle.checked,
+            exportModeSelect.value,
           );
           const blob = new Blob([animatedSvg], { type: 'image/svg+xml;charset=utf-8' });
           const url = URL.createObjectURL(blob);
@@ -261,7 +310,7 @@
           link.click();
 
           URL.revokeObjectURL(url);
-          setStatus(`Готово: автономный анимированный SVG экспортирован (${directionSelect.value === 'reverse' ? 'Reverse' : 'Forward'}, flip: ${flipVerticalToggle.checked ? 'on' : 'off'}).`);
+          setStatus(`Готово: экспортирован SVG (${exportModeSelect.value === 'js' ? 'Embedded JS' : 'CSS Frames'}, ${directionSelect.value === 'reverse' ? 'Reverse' : 'Forward'}, flip: ${flipVerticalToggle.checked ? 'on' : 'off'}).`);
         } catch (error) {
           setStatus('Ошибка экспорта: ' + error.message, true);
         } finally {
