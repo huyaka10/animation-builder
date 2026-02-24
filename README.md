@@ -1,48 +1,29 @@
-# lottie2svg (MVP)
+# Lottie JSON → SVG (Browser App)
 
-Browser-first конвертер Lottie JSON (Bodymovin) в self-contained animated SVG.
+Веб-приложение для конвертации Lottie JSON в self-contained SVG.
 
-## Что поддерживает MVP
+## Что делает
 
-- Shape layer pipeline: `shape`, `group`, `path`, `rectangle`, `ellipse` (через path), `trim paths`, `transform`, `opacity`.
-- Анимация trim paths через `stroke-dasharray` + `stroke-dashoffset`.
-- Режимы анимации: `smil` (по умолчанию) и `css`.
-- Неподдерживаемые возможности не ломают выполнение: выводятся warning-сообщения.
+- Работает полностью в браузере.
+- Загружает `.json` через `<input type="file">`.
+- Конвертирует через `convertLottieToSvg(lottieJson)`.
+- Показывает анимированный SVG в preview.
+- Даёт скачать готовый SVG (внутри SVG есть `<script>` с `requestAnimationFrame`).
 
 ## Архитектура (сохранена)
 
-- `src/parser` — парсинг/валидация Lottie.
+- `src/parser` — разбор Lottie JSON.
 - `src/converters` — shape/transform/trim преобразования.
-- `src/generators` — SVG + SMIL/CSS аниматоры.
-- `src/index.ts` — публичный API `convertLottieToSvg()`.
+- `src/generators` — сборка SVG и JS-аниматора.
 
-## API
-
-```ts
-import { convertLottieToSvg } from './src/index';
-
-const svg = convertLottieToSvg(lottieJsonStringOrObject, {
-  mode: 'smil',
-  pretty: true,
-  optimize: false,
-});
-```
-
-## Browser UI (без сервера рантайма)
-
-Добавлен `index.html`:
-- file input для Lottie JSON,
-- кнопка Convert,
-- вывод готового SVG (markup + preview).
-
-После сборки Vite создаёт статические файлы (`dist/`), которые можно открыть как обычные файлы.
-
-## Команды
+## Запуск
 
 ```bash
 npm run dev
-npm run build
-npm run preview
-npm run check
-npm run test
+```
+
+## Публичная функция
+
+```ts
+convertLottieToSvg(lottieJson: string): string
 ```

@@ -1,13 +1,11 @@
-import { buildTrimPresentation } from '../converters/trim.js';
 import { extractPath, lottiePathToSvgD } from '../converters/shape.js';
 import { buildTransform } from '../converters/transform.js';
+import { buildTrimPresentation } from '../converters/trim.js';
 import { LottieDocument, LottieLayer, LottieShapeItem, LottieTrimItem, WarningCollector } from '../types/lottie.js';
 import { estimatePathLength } from '../utils/path-length.js';
+import { buildEmbeddedAnimatorScript } from './js-animator.js';
 
 interface BuildOptions {
-  mode: 'smil' | 'css';
-  pretty?: boolean;
-  optimize?: boolean;
   warnings: WarningCollector;
 }
 
@@ -27,9 +25,7 @@ function shapeWarnings(item: LottieShapeItem, warnings: WarningCollector): void 
 
 export function buildSvg(doc: LottieDocument, options: BuildOptions): string {
   const lines: string[] = [];
-  const cssKeyframes: string[] = [];
-  const indent = options.pretty ? '  ' : '';
-  const nl = options.pretty ? '\n' : '';
+  const animItems: string[] = [];
 
   lines.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${doc.w} ${doc.h}" width="${doc.w}" height="${doc.h}">`);
 
@@ -37,57 +33,42 @@ export function buildSvg(doc: LottieDocument, options: BuildOptions): string {
     unsupportedLayerWarnings(layer, options.warnings);
     if (layer.ty !== 4 || !layer.shapes) continue;
 
-    const transform = buildTransform(layer.ks, doc.fr, options.mode, `opacity_${layerIndex}`);
-    const layerBody: string[] = [];
+    const transform = buildTransform(layer.ks, doc.fr);
+    lines.push(`<g transform="${transform.transform}" opacity="${transform.opacity}" transform-origin="${transform.origin}">`);
+
     const currentTrim = layer.shapes.find((item) => item.ty === 'tm' && 'e' in item && 's' in item && 'o' in item) as LottieTrimItem | undefined;
 
-    for (const item of layer.shapes) {
+    for (const [shapeIndex, item] of layer.shapes.entries()) {
       shapeWarnings(item, options.warnings);
       if (item.ty === 'tm') continue;
 
       const path = extractPath(item);
       if (!path) continue;
 
+      const id = `trim_path_${layerIndex}_${shapeIndex}`;
       const d = lottiePathToSvgD(path);
-      const styleParts: string[] = ['fill="none"', 'stroke="black"', 'stroke-width="2"'];
-      const childFragments: string[] = [];
-      let className = '';
+      let dasharray = 0;
+      let dashoffset = 0;
 
       if (currentTrim) {
         const pathLength = estimatePathLength(path);
-        const trim = buildTrimPresentation(currentTrim, pathLength, doc.fr, options.mode, `trim_${layerIndex}`);
-        styleParts.push(`stroke-dasharray="${trim.dasharray}"`);
-        styleParts.push(`stroke-dashoffset="${trim.dashoffset}"`);
-        if (trim.smilAnimation) childFragments.push(trim.smilAnimation);
-        if (trim.cssAnimation) {
-          cssKeyframes.push(trim.cssAnimation.keyframes);
-          className = ` class="trim_${layerIndex}"`;
-          cssKeyframes.push(`.trim_${layerIndex} { ${trim.cssAnimation.classRule} }`);
-        }
+        const trim = buildTrimPresentation(currentTrim);
+        const span = Math.max(0, trim.initialEnd - trim.initialStart);
+        dasharray = Math.max(0.0001, (span / 100) * pathLength);
+        dashoffset = pathLength * (1 - trim.initialEnd / 100) - (trim.initialOffset / 360) * pathLength;
+
+        animItems.push(`{"id":"${id}","length":${pathLength},"start":${trim.initialStart},"end":${trim.initialEnd},"offset":${trim.initialOffset},"startKf":${trim.startKeyframes},"endKf":${trim.endKeyframes},"offsetKf":${trim.offsetKeyframes}}`);
       }
 
-      if (transform.opacitySmil) childFragments.push(transform.opacitySmil);
-      if (transform.opacityCss) {
-        cssKeyframes.push(transform.opacityCss.keyframes);
-        className = ` class="opacity_${layerIndex}${className ? ` ${className.replace(' class="', '').replace('"', '')}` : ''}"`;
-        cssKeyframes.push(`.opacity_${layerIndex} { ${transform.opacityCss.classRule} }`);
-      }
-
-      layerBody.push(`${indent}<path${className} d="${d}" ${styleParts.join(' ')}>${childFragments.join('')}</path>`);
+      const dashAttrs = currentTrim ? ` stroke-dasharray="${dasharray}" stroke-dashoffset="${dashoffset}"` : '';
+      lines.push(`<path id="${id}" d="${d}" fill="none" stroke="black" stroke-width="2"${dashAttrs} />`);
     }
 
-    lines.push(`${indent}<g transform="${transform.transform}" opacity="${transform.opacity}" transform-origin="${transform.origin}">${nl}${layerBody.join(nl)}${nl}${indent}</g>`);
+    lines.push(`</g>`);
   }
 
-  if (options.mode === 'css' && cssKeyframes.length) {
-    lines.splice(1, 0, `${indent}<style>${cssKeyframes.join(options.pretty ? '\n' : '')}</style>`);
-  }
+  lines.push(`<script><![CDATA[${buildEmbeddedAnimatorScript(`[${animItems.join(',')}]`, doc.fr, doc.ip, doc.op)}]]></script>`);
+  lines.push(`</svg>`);
 
-  lines.push('</svg>');
-  const svg = lines.join(nl);
-
-  if (options.optimize) {
-    return svg.replace(/\s+/g, ' ').replace(/> </g, '><').trim();
-  }
-  return svg;
+  return lines.join('');
 }

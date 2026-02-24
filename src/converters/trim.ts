@@ -1,41 +1,22 @@
 import { LottieTrimItem } from '../types/lottie.js';
-import { buildCssNumberAnimation } from '../generators/css-animator.js';
-import { buildSmilNumberAnimation } from '../generators/smil-animator.js';
-import { isKeyframed, staticValue } from '../utils/keyframes.js';
+import { keyframes, staticValue } from '../utils/keyframes.js';
 
-export interface TrimBuildResult {
-  dasharray: number;
-  dashoffset: number;
-  smilAnimation?: string;
-  cssAnimation?: { keyframes: string; classRule: string };
+export interface TrimPresentation {
+  initialStart: number;
+  initialEnd: number;
+  initialOffset: number;
+  startKeyframes: string;
+  endKeyframes: string;
+  offsetKeyframes: string;
 }
 
-export function buildTrimPresentation(trim: LottieTrimItem, pathLength: number, fr: number, mode: 'smil' | 'css', animationName: string): TrimBuildResult {
-  const start = staticValue(trim.s);
-  const end = staticValue(trim.e);
-  const offset = staticValue(trim.o);
-  const span = Math.max(0, end - start);
-  const visible = (span / 100) * pathLength;
-  const baseOffset = pathLength * (1 - end / 100) - (offset / 360) * pathLength;
-
-  const result: TrimBuildResult = {
-    dasharray: Math.max(0.0001, visible),
-    dashoffset: baseOffset,
+export function buildTrimPresentation(trim: LottieTrimItem): TrimPresentation {
+  return {
+    initialStart: staticValue(trim.s),
+    initialEnd: staticValue(trim.e),
+    initialOffset: staticValue(trim.o),
+    startKeyframes: JSON.stringify(keyframes(trim.s)),
+    endKeyframes: JSON.stringify(keyframes(trim.e)),
+    offsetKeyframes: JSON.stringify(keyframes(trim.o)),
   };
-
-  const isAnimated = isKeyframed(trim.s) || isKeyframed(trim.e) || isKeyframed(trim.o);
-  if (!isAnimated) {
-    return result;
-  }
-
-  if (mode === 'smil') {
-    result.smilAnimation = buildSmilNumberAnimation('stroke-dashoffset', trim.e, fr);
-  } else {
-    const cssAnim = buildCssNumberAnimation(animationName, 'stroke-dashoffset', trim.e, fr);
-    if (cssAnim) {
-      result.cssAnimation = cssAnim;
-    }
-  }
-
-  return result;
 }

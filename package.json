@@ -1,19 +1,17 @@
 {
-  "name": "lottie2svg",
-  "version": "0.2.0",
-  "description": "Browser-first Lottie to self-contained animated SVG converter",
+  "name": "lottie2svg-browser",
+  "version": "0.3.0",
+  "description": "Browser web app converting Lottie JSON to self-contained animated SVG with embedded JS animation",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "tsc --noEmit",
-    "test": "tsc -p tsconfig.test.json && node dist-test/test/smoke-test.js"
+    "check": "tsc --noEmit"
   },
-  "keywords": ["lottie", "svg", "animation", "browser", "vite"],
+  "keywords": ["lottie", "svg", "browser", "vite"],
   "license": "MIT",
   "devDependencies": {
-    "@types/node": "^22.10.2",
     "typescript": "^5.7.2",
     "vite": "^5.4.11"
   }

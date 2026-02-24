@@ -24,13 +24,10 @@ export interface LottiePathData {
 export interface LottieShapeItem {
   ty: string;
   nm?: string;
-  ks?: {
-    k: LottiePathData;
-  };
+  ks?: { k: LottiePathData };
   p?: { k: [number, number] };
   s?: { k: [number, number] } | LottieAnimProp<number>;
   r?: { k: number };
-  c?: { k: [number, number, number, number] };
   o?: { k: number } | LottieAnimProp<number>;
   w?: { k: number };
   lc?: number;
@@ -69,8 +66,6 @@ export interface LottieLayer {
   bm?: number;
   td?: number;
   tt?: number;
-  ao?: number;
-  sr?: number;
 }
 
 export interface LottieDocument {
@@ -81,15 +76,6 @@ export interface LottieDocument {
   w: number;
   h: number;
   layers: LottieLayer[];
-  assets?: unknown[];
-  chars?: unknown[];
-  fonts?: unknown;
-}
-
-export interface ConverterOptions {
-  mode: 'smil' | 'css';
-  pretty?: boolean;
-  optimize?: boolean;
 }
 
 export interface WarningCollector {
