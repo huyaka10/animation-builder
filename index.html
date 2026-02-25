@@ -152,9 +152,8 @@
         const totalFrames = Math.max(1, Math.round(outPoint - inPoint));
         const durationSec = totalFrames / frameRate;
 
-        const frameSvgs = [];
-        for (let i = 0; i < totalFrames; i += 1) {
-          tempPlayer.goToAndStop(i, true);
+        const captureFrameSvg = async (frameIndex) => {
+          tempPlayer.goToAndStop(frameIndex, true);
           await nextFrame();
 
           const frameSvg = tempContainer.querySelector('svg');
@@ -169,18 +168,29 @@
           clone.setAttribute('width', String(width));
           clone.setAttribute('height', String(height));
           clone.setAttribute('viewBox', `0 0 ${width} ${height}`);
-          frameSvgs.push(clone.outerHTML);
+          return clone.outerHTML;
+        };
 
-          if (i === 0 || i === totalFrames - 1 || i % 10 === 0) {
-            setStatus(`Экспорт: подготовка кадров ${i + 1}/${totalFrames}…`);
+        let frameSvgs = [];
+        let frameDuration = durationSec / totalFrames;
+        let orderedFrames = [];
+
+        if (animationMode === 'trim') {
+          setStatus('Экспорт: trim-анализ…');
+          frameSvgs = [await captureFrameSvg(0)];
+          orderedFrames = frameSvgs;
+        } else {
+          for (let i = 0; i < totalFrames; i += 1) {
+            frameSvgs.push(await captureFrameSvg(i));
+            if (i === 0 || i === totalFrames - 1 || i % 10 === 0) {
+              setStatus(`Экспорт: подготовка кадров ${i + 1}/${totalFrames}…`);
+            }
           }
+          orderedFrames = direction === 'reverse' ? [...frameSvgs].reverse() : frameSvgs;
         }
 
         tempPlayer.destroy();
         tempContainer.remove();
-
-        const frameDuration = durationSec / totalFrames;
-        const orderedFrames = direction === 'reverse' ? [...frameSvgs].reverse() : frameSvgs;
 
         let styleMarkup = '';
         let scriptMarkup = '';
