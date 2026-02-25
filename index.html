@@ -200,9 +200,16 @@
 
           for (let i = 0; i < geo.length; i += 1) {
             const el = geo[i];
-            const stroke = el.getAttribute('stroke');
-            const strokeWidth = Number(el.getAttribute('stroke-width') || 1);
-            if (!stroke || stroke === 'none' || strokeWidth <= 0) continue;
+            const computed = getComputedStyle(el);
+            const stroke = el.getAttribute('stroke') || computed.stroke;
+            const strokeWidth = Number(el.getAttribute('stroke-width') || computed.strokeWidth || 0);
+            const noStroke =
+              !stroke ||
+              stroke === 'none' ||
+              stroke === 'transparent' ||
+              stroke.includes('rgba(0, 0, 0, 0)') ||
+              stroke.includes('rgba(0,0,0,0)');
+            if (noStroke || strokeWidth <= 0) continue;
             if (typeof el.getTotalLength !== 'function') continue;
 
             let length = 0;
@@ -222,20 +229,19 @@
           sampleSvg.remove();
 
           if (!animated.length) {
-            setStatus('Trim-режим: не найдено stroke-сегментов, fallback на CSS-кадры.', true);
-            animationMode = 'css';
-          } else {
-            const cssParts = [];
-            for (const seg of animated) {
-              const startOffset = direction === 'reverse' ? 0 : seg.length;
-              const endOffset = direction === 'reverse' ? seg.length : 0;
-              cssParts.push(`.${seg.cls}{stroke-dasharray:${seg.length};stroke-dashoffset:${startOffset};animation:${seg.cls}-anim ${durationSec.toFixed(6)}s linear infinite;}`);
-              cssParts.push(`@keyframes ${seg.cls}-anim{0%{stroke-dashoffset:${startOffset};}100%{stroke-dashoffset:${endOffset};}}`);
-            }
-            styleMarkup = `
-<style>${cssParts.join('')}</style>`;
-            frameParts.push(svgMarkup);
+            throw new Error('Trim: stroke-сегменты не найдены.');
           }
+
+          const cssParts = [];
+          for (const seg of animated) {
+            const startOffset = direction === 'reverse' ? 0 : seg.length;
+            const endOffset = direction === 'reverse' ? seg.length : 0;
+            cssParts.push(`.${seg.cls}{stroke-dasharray:${seg.length};stroke-dashoffset:${startOffset};animation:${seg.cls}-anim ${durationSec.toFixed(6)}s linear infinite;}`);
+            cssParts.push(`@keyframes ${seg.cls}-anim{0%{stroke-dashoffset:${startOffset};}100%{stroke-dashoffset:${endOffset};}}`);
+          }
+          styleMarkup = `
+<style>${cssParts.join('')}</style>`;
+          frameParts.push(svgMarkup);
         }
 
         if (animationMode === 'js') {
@@ -291,10 +297,11 @@ ${animationMarkup}
 </g>`
           : animationMarkup;
 
-        return `<?xml version="1.0" encoding="UTF-8"?>
+        const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${EXPORT_SIZE_PX}px" height="${EXPORT_SIZE_PX}px" viewBox="0 0 ${width} ${height}">${styleMarkup}
 ${flippedMarkup}${scriptMarkup}
 </svg>`;
+        return { svg, modeUsed: animationMode };
       }
 
       async function handleFile(file) {
@@ -345,13 +352,13 @@ ${flippedMarkup}${scriptMarkup}
         exportBtn.disabled = true;
         try {
           setStatus('Экспорт: подготовка автономного SVG…');
-          const animatedSvg = await buildAutonomousSvg(
+          const result = await buildAutonomousSvg(
             loadedAnimationData,
             directionSelect.value,
             flipVerticalToggle.checked,
             exportModeSelect.value,
           );
-          const blob = new Blob([animatedSvg], { type: 'image/svg+xml;charset=utf-8' });
+          const blob = new Blob([result.svg], { type: 'image/svg+xml;charset=utf-8' });
           const url = URL.createObjectURL(blob);
 
           const link = document.createElement('a');
@@ -360,7 +367,7 @@ ${flippedMarkup}${scriptMarkup}
           link.click();
 
           URL.revokeObjectURL(url);
-          const modeLabel = exportModeSelect.value === 'js' ? 'Embedded JS' : exportModeSelect.value === 'trim' ? 'Trim/Dash' : 'CSS Frames';
+          const modeLabel = result.modeUsed === 'js' ? 'Embedded JS' : result.modeUsed === 'trim' ? 'Trim/Dash' : 'CSS Frames';
           setStatus(`Готово: экспортирован SVG (${modeLabel}, ${directionSelect.value === 'reverse' ? 'Reverse' : 'Forward'}, flip: ${flipVerticalToggle.checked ? 'on' : 'off'}).`);
         } catch (error) {
           setStatus('Ошибка: ' + error.message, true);

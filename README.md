@@ -31,3 +31,5 @@ python3 -m http.server 8000
 
 
 - Trim/Dash режим анимирует stroke через `stroke-dasharray`/`stroke-dashoffset` для найденных stroke-сегментов.
+
+- В режиме Trim, если stroke-сегменты не найдены, экспорт завершится ошибкой (без скрытого fallback на CSS).
