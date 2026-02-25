@@ -183,7 +183,7 @@
           for (let i = 0; i < totalFrames; i += 1) {
             frameSvgs.push(await captureFrameSvg(i));
             if (i === 0 || i === totalFrames - 1 || i % 10 === 0) {
-              setStatus(`Экспорт: подготовка кадров ${i + 1}/${totalFrames}…`);
+              setStatus(`Кадры ${i + 1}/${totalFrames}…`);
             }
           }
           orderedFrames = direction === 'reverse' ? [...frameSvgs].reverse() : frameSvgs;
@@ -285,9 +285,10 @@ ${runtimeScript}
 ]]><\/script>`;
         } else if (animationMode === 'css') {
           const visiblePercent = (100 / totalFrames).toFixed(6);
+          const offPercent = Math.min(99.999999, Number(visiblePercent) + 0.0001).toFixed(6);
           const cssParts = [
-            `.f{opacity:0;animation:showFrame ${durationSec.toFixed(6)}s linear infinite;}`,
-            `@keyframes showFrame{0%,${visiblePercent}%{opacity:1;}${visiblePercent}% ,100%{opacity:0;}}`,
+            `.f{opacity:0;animation:showFrame ${durationSec.toFixed(6)}s steps(1,end) infinite;animation-fill-mode:both;}`,
+            `@keyframes showFrame{0%,${visiblePercent}%{opacity:1;}${offPercent}%,100%{opacity:0;}}`,
           ];
 
           for (let i = 0; i < orderedFrames.length; i += 1) {
