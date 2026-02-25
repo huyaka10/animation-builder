@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lottie JSON → SVG конвертер</title>
+    <style>
+      :root { color-scheme: light dark; }
+      body { font-family: Inter, Arial, sans-serif; max-width: 720px; margin: 20px auto; padding: 0 12px 20px; }
+      h1 { margin-bottom: 8px; }
+      p { opacity: 0.9; }
+      .panel { border: 1px solid #d0d7e2; border-radius: 10px; padding: 12px; margin: 10px 0; }
+      .panel h2 { margin: 0 0 8px; font-size: 1rem; }
+      .drop-zone { border: 2px dashed #7f8ea3; border-radius: 10px; padding: 14px; text-align: center; margin: 6px 0; transition: 0.2s border-color ease; }
+      .drop-zone.dragover { border-color: #3b82f6; }
+      .toolbar { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+      button, select { border: 1px solid #8f9db1; border-radius: 8px; padding: 6px 10px; }
+      button { cursor: pointer; }
+      .primary { background: #2563eb; color: #fff; border-color: #1d4ed8; }
+      .file-name, .hint { font-size: 0.86rem; opacity: 0.9; margin-top: 6px; display: block; }
+      #status { min-height: 20px; margin: 8px 0; }
+      #preview { min-height: 240px; border: 1px solid #d0d7e2; border-radius: 10px; padding: 8px; display: grid; place-items: center; }
+      #preview svg { max-width: 100%; height: auto; }
+      #preview.flip-vertical svg { transform: scaleY(-1); transform-origin: center; }
+      #renderSandbox { position: fixed; inset: auto auto -99999px -99999px; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
+    </style>
+  </head>
+  <body>
+    <h1>Lottie → SVG</h1>
+    
+
+    <section class="panel" aria-label="Импорт Lottie JSON">
+      <h2>Импорт</h2>
+      <label class="drop-zone" id="dropZone">
+        JSON файл
+        <br /><br />
+        <button id="importBtn" class="primary" type="button">Импорт</button>
+        <input id="fileInput" type="file" accept=".json,application/json" hidden />
+      </label>
+      <div class="file-name" id="fileName">Файл не выбран</div>
+    </section>
+
+    <section class="panel" aria-label="Экспорт SVG">
+      <h2>Экспорт</h2>
+      <div class="toolbar">
+        <button id="playBtn" type="button">Play</button>
+        <button id="pauseBtn" type="button">Pause</button>
+        <button id="stopBtn" type="button">Stop</button>
+        <button id="exportBtn" class="primary" type="button">SVG</button>
+      </div>
+      <select id="directionSelect">
+        <option value="forward" selected>Forward</option>
+        <option value="reverse">Reverse</option>
+      </select>
+      <select id="exportModeSelect">
+        <option value="css" selected>CSS</option>
+        <option value="js">JS</option>
+        <option value="trim">Trim</option>
+      </select>
+      <label class="hint" for="flipVerticalToggle">
+        <input id="flipVerticalToggle" type="checkbox" checked />
+        Flip Y
+      </label>
+            <div id="status">Готово</div>
+    </section>
+
+    <div id="preview" aria-label="Предпросмотр"></div>
+    <div id="renderSandbox" aria-hidden="true"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
+    <script>
+      const dropZone = document.getElementById('dropZone');
+      const importBtn = document.getElementById('importBtn');
+      const fileInput = document.getElementById('fileInput');
+      const fileNameNode = document.getElementById('fileName');
+      const preview = document.getElementById('preview');
+      const statusNode = document.getElementById('status');
+      const renderSandbox = document.getElementById('renderSandbox');
+
+      const playBtn = document.getElementById('playBtn');
+      const pauseBtn = document.getElementById('pauseBtn');
+      const stopBtn = document.getElementById('stopBtn');
+      const exportBtn = document.getElementById('exportBtn');
+      const directionSelect = document.getElementById('directionSelect');
+      const flipVerticalToggle = document.getElementById('flipVerticalToggle');
+      const exportModeSelect = document.getElementById('exportModeSelect');
+
+      let player = null;
+      let loadedFileName = 'animation';
+      let loadedAnimationData = null;
+      const EXPORT_SIZE_PX = 320;
+
+      function setStatus(message, isError = false) {
+        statusNode.textContent = message;
+        statusNode.style.color = isError ? '#dc2626' : '';
+      }
+
+      function applyPreviewFlip() {
+        preview.classList.toggle('flip-vertical', flipVerticalToggle.checked);
+      }
+
+      function clearPlayer() {
+        if (player) {
+          player.destroy();
+          player = null;
+        }
+        preview.innerHTML = '';
+      }
+
+      function loadLottie(animationData) {
+        clearPlayer();
+        player = lottie.loadAnimation({
+          container: preview,
+          renderer: 'svg',
+          loop: true,
+          autoplay: true,
+          animationData,
+        });
+        applyPreviewFlip();
+        setStatus('Загружено');
+      }
+
+      function waitForAnimationEvent(animation, eventName) {
+        return new Promise((resolve) => {
+          animation.addEventListener(eventName, resolve, { once: true });
+        });
+      }
+
+      function nextFrame() {
+        return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      }
+
+      async function buildAutonomousSvg(animationData, direction = 'forward', flipVertical = false, animationMode = 'css') {
+        const tempContainer = document.createElement('div');
+        renderSandbox.appendChild(tempContainer);
+
+        const tempPlayer = lottie.loadAnimation({
+          container: tempContainer,
+          renderer: 'svg',
+          loop: false,
+          autoplay: false,
+          animationData,
+        });
+
+        await waitForAnimationEvent(tempPlayer, 'DOMLoaded');
+
+        const width = Number(animationData.w) || 512;
+        const height = Number(animationData.h) || 512;
+        const frameRate = Number(animationData.fr) || 30;
+        const inPoint = Number(animationData.ip) || 0;
+        const outPoint = Number(animationData.op) || tempPlayer.totalFrames || 1;
+        const totalFrames = Math.max(1, Math.round(outPoint - inPoint));
+        const durationSec = totalFrames / frameRate;
+
+        const captureFrameSvg = async (frameIndex) => {
+          tempPlayer.goToAndStop(frameIndex, true);
+          await nextFrame();
+
+          const frameSvg = tempContainer.querySelector('svg');
+          if (!frameSvg) {
+            throw new Error('Не удалось получить SVG кадр.');
+          }
+
+          const clone = frameSvg.cloneNode(true);
+          clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+          clone.setAttribute('x', '0');
+          clone.setAttribute('y', '0');
+          clone.setAttribute('width', String(width));
+          clone.setAttribute('height', String(height));
+          clone.setAttribute('viewBox', `0 0 ${width} ${height}`);
+          return clone.outerHTML;
+        };
+
+        let frameSvgs = [];
+        let frameDuration = durationSec / totalFrames;
+        let orderedFrames = [];
+
+        if (animationMode === 'trim') {
+          setStatus('Экспорт: trim-анализ…');
+          frameSvgs = [await captureFrameSvg(0)];
+          orderedFrames = frameSvgs;
+        } else {
+          for (let i = 0; i < totalFrames; i += 1) {
+            frameSvgs.push(await captureFrameSvg(i));
+            if (i === 0 || i === totalFrames - 1 || i % 10 === 0) {
+              setStatus(`Кадры ${i + 1}/${totalFrames}…`);
+            }
+          }
+          orderedFrames = direction === 'reverse' ? [...frameSvgs].reverse() : frameSvgs;
+        }
+
+        tempPlayer.destroy();
+        tempContainer.remove();
+
+        let styleMarkup = '';
+        let scriptMarkup = '';
+        const frameParts = [];
+
+        if (animationMode === 'trim') {
+          const holder = document.createElement('div');
+          holder.innerHTML = orderedFrames[0] || '';
+          const sampleSvg = holder.querySelector('svg');
+          if (!sampleSvg) {
+            throw new Error('Trim-режим: не найден SVG для анализа.');
+          }
+
+          renderSandbox.appendChild(sampleSvg);
+          const geo = Array.from(sampleSvg.querySelectorAll('path,circle,ellipse,rect,line,polyline,polygon'));
+          const animated = [];
+
+          for (let i = 0; i < geo.length; i += 1) {
+            const el = geo[i];
+            const computed = getComputedStyle(el);
+            const stroke = el.getAttribute('stroke') || computed.stroke;
+            const strokeWidth = Number(el.getAttribute('stroke-width') || computed.strokeWidth || 0);
+            const noStroke =
+              !stroke ||
+              stroke === 'none' ||
+              stroke === 'transparent' ||
+              stroke.includes('rgba(0, 0, 0, 0)') ||
+              stroke.includes('rgba(0,0,0,0)');
+            if (noStroke || strokeWidth <= 0) continue;
+            if (typeof el.getTotalLength !== 'function') continue;
+
+            let length = 0;
+            try {
+              length = el.getTotalLength();
+            } catch {
+              length = 0;
+            }
+            if (!Number.isFinite(length) || length <= 0.01) continue;
+
+            const cls = `trim-seg-${animated.length}`;
+            el.classList.add(cls);
+            animated.push({ cls, length: length.toFixed(3) });
+          }
+
+          const svgMarkup = sampleSvg.outerHTML;
+          sampleSvg.remove();
+
+          if (!animated.length) {
+            throw new Error('Trim: stroke-сегменты не найдены.');
+          }
+
+          const cssParts = [];
+          for (const seg of animated) {
+            const startOffset = direction === 'reverse' ? 0 : seg.length;
+            const endOffset = direction === 'reverse' ? seg.length : 0;
+            cssParts.push(`.${seg.cls}{stroke-dasharray:${seg.length};stroke-dashoffset:${startOffset};animation:${seg.cls}-anim ${durationSec.toFixed(6)}s linear infinite;}`);
+            cssParts.push(`@keyframes ${seg.cls}-anim{0%{stroke-dashoffset:${startOffset};}100%{stroke-dashoffset:${endOffset};}}`);
+          }
+          styleMarkup = `
+<style>${cssParts.join('')}</style>`;
+          frameParts.push(svgMarkup);
+        }
+
+        if (animationMode === 'js') {
+          for (let i = 0; i < orderedFrames.length; i += 1) {
+            frameParts.push(`<g class="f" data-frame="${i}" style="display:${i === 0 ? 'inline' : 'none'}">${orderedFrames[i]}</g>`);
+          }
+
+          const runtimeScript = `(() => {
+  const frames = Array.from(document.querySelectorAll('.f'));
+  if (!frames.length) return;
+  const frameDurationMs = ${(1000 / frameRate).toFixed(4)};
+  let index = 0;
+  let last = performance.now();
+  function show(idx){
+    for (let i = 0; i < frames.length; i += 1) frames[i].style.display = i === idx ? 'inline' : 'none';
+  }
+  function tick(now){
+    if (now - last >= frameDurationMs){
+      index = (index + 1) % frames.length;
+      show(index);
+      last = now;
+    }
+    requestAnimationFrame(tick);
+  }
+  show(0);
+  requestAnimationFrame(tick);
+})();`;
+          scriptMarkup = `
+<script><![CDATA[
+${runtimeScript}
+]]><\/script>`;
+        } else if (animationMode === 'css') {
+          const visiblePercent = (100 / totalFrames).toFixed(6);
+          const offPercent = Math.min(99.999999, Number(visiblePercent) + 0.0001).toFixed(6);
+          const cssParts = [
+            `.f{opacity:0;animation:showFrame ${durationSec.toFixed(6)}s steps(1,end) infinite;animation-fill-mode:both;}`,
+            `@keyframes showFrame{0%,${visiblePercent}%{opacity:1;}${offPercent}%,100%{opacity:0;}}`,
+          ];
+
+          for (let i = 0; i < orderedFrames.length; i += 1) {
+            const delay = i * frameDuration;
+            cssParts.push(`.f${i}{animation-delay:${delay.toFixed(6)}s;}`);
+            frameParts.push(`<g class="f f${i}">${orderedFrames[i]}</g>`);
+          }
+
+          styleMarkup = `
+<style>${cssParts.join('')}</style>`;
+        }
+
+        const animationMarkup = frameParts.join('\n');
+        const flippedMarkup = flipVertical
+          ? `<g transform="translate(0 ${height}) scale(1 -1)">
+${animationMarkup}
+</g>`
+          : animationMarkup;
+
+        const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${EXPORT_SIZE_PX}px" height="${EXPORT_SIZE_PX}px" viewBox="0 0 ${width} ${height}">${styleMarkup}
+${flippedMarkup}${scriptMarkup}
+</svg>`;
+        return { svg, modeUsed: animationMode };
+      }
+
+      async function handleFile(file) {
+        try {
+          loadedFileName = file.name.replace(/\.json$/i, '') || 'animation';
+          fileNameNode.textContent = `Выбран файл: ${file.name}`;
+          const text = await file.text();
+          loadedAnimationData = JSON.parse(text);
+          loadLottie(loadedAnimationData);
+        } catch (error) {
+          loadedAnimationData = null;
+          clearPlayer();
+          fileNameNode.textContent = 'Файл не выбран';
+          setStatus('Не удалось загрузить JSON: ' + error.message, true);
+        }
+      }
+
+      importBtn.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', (event) => {
+        const file = event.target.files?.[0];
+        if (file) handleFile(file);
+      });
+
+      dropZone.addEventListener('dragover', (event) => {
+        event.preventDefault();
+        dropZone.classList.add('dragover');
+      });
+      dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+      dropZone.addEventListener('drop', (event) => {
+        event.preventDefault();
+        dropZone.classList.remove('dragover');
+        const file = event.dataTransfer.files?.[0];
+        if (file) handleFile(file);
+      });
+
+      flipVerticalToggle.addEventListener('change', applyPreviewFlip);
+
+      playBtn.addEventListener('click', () => player?.play());
+      pauseBtn.addEventListener('click', () => player?.pause());
+      stopBtn.addEventListener('click', () => player?.stop());
+
+      exportBtn.addEventListener('click', async () => {
+        if (!loadedAnimationData) {
+          setStatus('Сначала импорт', true);
+          return;
+        }
+
+        exportBtn.disabled = true;
+        try {
+          setStatus('Экспорт: подготовка автономного SVG…');
+          const result = await buildAutonomousSvg(
+            loadedAnimationData,
+            directionSelect.value,
+            flipVerticalToggle.checked,
+            exportModeSelect.value,
+          );
+          const blob = new Blob([result.svg], { type: 'image/svg+xml;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `${loadedFileName}-autonomous.svg`;
+          link.click();
+
+          URL.revokeObjectURL(url);
+          const modeLabel = result.modeUsed === 'js' ? 'Embedded JS' : result.modeUsed === 'trim' ? 'Trim/Dash' : 'CSS Frames';
+          setStatus(`Готово: экспортирован SVG (${modeLabel}, ${directionSelect.value === 'reverse' ? 'Reverse' : 'Forward'}, flip: ${flipVerticalToggle.checked ? 'on' : 'off'}).`);
+        } catch (error) {
+          setStatus('Ошибка: ' + error.message, true);
+        } finally {
+          exportBtn.disabled = false;
+        }
+      });
+
+      applyPreviewFlip();
+    </script>
+  </body>
+</html>
