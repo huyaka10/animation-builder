@@ -133,8 +133,22 @@ const searchInput = document.getElementById('searchInput');
 const viewHierarchyBtn = document.getElementById('viewHierarchy');
 const viewSlicesBtn = document.getElementById('viewSlices');
 const tableCard = document.getElementById('tableCard');
+const filterModeToggle = document.getElementById('filterModeToggle');
+const filterModeActions = document.getElementById('filterModeActions');
+const showAllRowsBtn = document.getElementById('showAllRowsBtn');
+const hideNonKeyBtn = document.getElementById('hideNonKeyBtn');
+
+const hierarchyColumns = [
+  { key: 'control', label: 'Контрольная группа', canHide: false },
+  { key: 'test1', label: 'Тестовая группа 1', canHide: true },
+  { key: 'test2', label: 'Тестовая группа 2', canHide: true },
+  { key: 'test3', label: 'Тестовая группа 3', canHide: true },
+];
 
 let viewMode = 'hierarchy';
+let filterMode = false;
+const hiddenRowIds = new Set();
+const hiddenColumnKeys = new Set();
 
 function flatten(nodes, parentId = null) {
   return nodes.flatMap((node) => {
@@ -185,6 +199,15 @@ function renderHeaders(labels) {
   });
 }
 
+
+function getEyeIcon(isHidden) {
+  return isHidden ? '⊘' : '◉';
+}
+
+function isRowHiddenByFilter(rowId) {
+  return hiddenRowIds.has(rowId);
+}
+
 function hasVisibleChild(rows, rowId, query) {
   return rows.some((row) => {
     if (row.parentId !== rowId) return false;
@@ -232,39 +255,102 @@ function createNameCell(row, query, expandedSet, onToggle) {
 }
 
 function renderHierarchy(query = '') {
-  renderHeaders(['Метрики и срезы', 'Контрольная группа', 'Тестовая группа 1', 'Тестовая группа 2', 'Тестовая группа 3']);
+  const visibleColumns = hierarchyColumns.filter((column) => filterMode || !hiddenColumnKeys.has(column.key));
+  const headers = ['Метрики и срезы', ...visibleColumns.map((column) => column.label)];
+  renderHeaders(headers);
+
+  if (filterMode) {
+    const headerCells = headRow.querySelectorAll('th');
+    headerCells.forEach((th, index) => {
+      if (index === 0) {
+        th.innerHTML = `<span class="header-with-eye"><span class="eye-icon">${getEyeIcon(false)}</span> Метрики и срезы</span>`;
+        return;
+      }
+      const column = visibleColumns[index - 1];
+      const isHidden = hiddenColumnKeys.has(column.key);
+      const canHide = column.canHide;
+      th.classList.toggle('filter-hidden-col', isHidden);
+      th.innerHTML = `<span class="header-with-eye"><span class="eye-icon ${isHidden ? 'is-off' : ''} ${!canHide ? 'is-locked' : ''}" data-column="${column.key}" data-locked="${canHide ? '0' : '1'}">${getEyeIcon(isHidden)}</span> ${column.label}</span>`;
+    });
+  }
+
   tbody.innerHTML = '';
 
   hierarchyRows.forEach((row) => {
     const tr = document.createElement('tr');
     tr.classList.add(`level-${row.level}`);
     if (row.group) tr.classList.add('group');
+
+    const rowHiddenByFilter = isRowHiddenByFilter(row.id);
     if (!isVisible(hierarchyRows, expandedHierarchy, row, query)) tr.classList.add('hidden-row');
+    if (!filterMode && rowHiddenByFilter) tr.classList.add('hidden-row');
+    if (filterMode && rowHiddenByFilter) tr.classList.add('filter-hidden-row');
     if (query && row.name.toLowerCase().includes(query.toLowerCase())) tr.classList.add('match');
 
-    tr.appendChild(
-      createNameCell(row, query, expandedHierarchy, () => {
-        if (expandedHierarchy.has(row.id)) expandedHierarchy.delete(row.id);
-        else expandedHierarchy.add(row.id);
-        render();
-      }),
-    );
+    const nameCell = createNameCell(row, query, expandedHierarchy, () => {
+      if (expandedHierarchy.has(row.id)) expandedHierarchy.delete(row.id);
+      else expandedHierarchy.add(row.id);
+      render();
+    });
 
-    row.values.forEach((raw) => {
+    if (filterMode) {
+      const eye = document.createElement('span');
+      eye.className = `eye-icon row-eye ${rowHiddenByFilter ? 'is-off' : ''}`;
+      eye.textContent = getEyeIcon(rowHiddenByFilter);
+      eye.dataset.row = row.id;
+      nameCell.querySelector('.metric-cell').prepend(eye);
+    }
+
+    tr.appendChild(nameCell);
+
+    row.values.forEach((raw, index) => {
+      const column = hierarchyColumns[index];
+      if (!column) return;
+      if (!filterMode && hiddenColumnKeys.has(column.key)) return;
+
       const td = document.createElement('td');
       const { primary, delta } = splitValue(raw);
-      td.textContent = primary;
-      if (delta) {
-        const d = document.createElement('span');
-        d.className = `delta ${deltaClass(delta)}`;
-        d.textContent = ` ${delta}`;
-        td.appendChild(d);
+      const isColumnHidden = hiddenColumnKeys.has(column.key);
+
+      if (filterMode && (rowHiddenByFilter || isColumnHidden)) {
+        td.textContent = '';
+      } else {
+        td.textContent = primary;
+        if (delta) {
+          const d = document.createElement('span');
+          d.className = `delta ${deltaClass(delta)}`;
+          d.textContent = ` ${delta}`;
+          td.appendChild(d);
+        }
       }
       tr.appendChild(td);
     });
 
     tbody.appendChild(tr);
   });
+
+  if (filterMode) {
+    tbody.querySelectorAll('[data-row]').forEach((eye) => {
+      eye.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const rowId = eye.dataset.row;
+        if (hiddenRowIds.has(rowId)) hiddenRowIds.delete(rowId);
+        else hiddenRowIds.add(rowId);
+        render();
+      });
+    });
+
+    headRow.querySelectorAll('[data-column]').forEach((eye) => {
+      eye.addEventListener('click', (event) => {
+        event.stopPropagation();
+        if (eye.dataset.locked === '1') return;
+        const columnKey = eye.dataset.column;
+        if (hiddenColumnKeys.has(columnKey)) hiddenColumnKeys.delete(columnKey);
+        else hiddenColumnKeys.add(columnKey);
+        render();
+      });
+    });
+  }
 }
 
 
@@ -322,12 +408,40 @@ function render() {
 viewHierarchyBtn.addEventListener('click', () => {
   viewMode = 'hierarchy';
   setTabState(viewHierarchyBtn, viewSlicesBtn);
+  filterModeActions.classList.toggle('hidden', !filterMode);
+  filterModeToggle.classList.toggle('is-active', filterMode);
   render();
 });
 
 viewSlicesBtn.addEventListener('click', () => {
   viewMode = 'slices';
+  filterMode = false;
+  filterModeToggle.classList.remove('is-active');
+  filterModeActions.classList.add('hidden');
   setTabState(viewSlicesBtn, viewHierarchyBtn);
+  render();
+});
+
+
+filterModeToggle.addEventListener('click', () => {
+  if (viewMode !== 'hierarchy') return;
+  filterMode = !filterMode;
+  filterModeToggle.classList.toggle('is-active', filterMode);
+  filterModeActions.classList.toggle('hidden', !filterMode);
+  render();
+});
+
+showAllRowsBtn.addEventListener('click', () => {
+  hiddenRowIds.clear();
+  hiddenColumnKeys.clear();
+  render();
+});
+
+hideNonKeyBtn.addEventListener('click', () => {
+  hiddenRowIds.clear();
+  hiddenColumnKeys.clear();
+  ['test1', 'test2'].forEach((key) => hiddenColumnKeys.add(key));
+  ['platform', 'ios', 'android', 'web', 'region', 'subscription', 'conversion'].forEach((rowId) => hiddenRowIds.add(rowId));
   render();
 });
 

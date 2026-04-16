@@ -30,8 +30,12 @@
                 <button id="viewHierarchy" class="tab active" role="tab" aria-selected="true">Таблица</button>
                 <button id="viewSlices" class="tab" role="tab" aria-selected="false">Срезы × метрики</button>
               </div>
-              <button class="filter">⎚ Фильтр</button>
+              <button id="filterModeToggle" class="filter">⎚ Фильтр</button>
             </div>
+          </div>
+          <div id="filterModeActions" class="filter-actions hidden">
+            <button id="showAllRowsBtn">Показать все</button>
+            <button id="hideNonKeyBtn">Оставить только важные</button>
           </div>
         </header>
 

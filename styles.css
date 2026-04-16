@@ -156,6 +156,65 @@ button {
   padding: 7px 12px;
 }
 
+
+.filter.is-active {
+  background: #2e2e2e;
+  color: #fff;
+  border-color: #2e2e2e;
+}
+
+.filter-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.filter-actions button {
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
+.header-with-eye {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.eye-icon {
+  color: #7b8190;
+  font-size: 14px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.eye-icon.is-off {
+  color: #9ca1ab;
+}
+
+.eye-icon.is-locked {
+  cursor: default;
+  color: #4d78c3;
+}
+
+.row-eye {
+  margin-right: 4px;
+}
+
+.filter-hidden-row {
+  color: #9da3ad;
+}
+
+.filter-hidden-row .metric-cell span:last-child {
+  text-decoration: line-through;
+}
+
+.filter-hidden-col {
+  color: #9da3ad;
+}
+
+
 .table-card {
   background: var(--card);
   border: 1px solid var(--line);
