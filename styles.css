@@ -176,12 +176,30 @@ tr.group {
   width: 24px;
   height: 24px;
   border-radius: 7px;
-  border: 1px solid #d2d8e1;
-  font-size: 12px;
+  border: 1px solid #ccd3de;
   display: inline-grid;
   place-items: center;
-  background: white;
+  background: #fff;
   padding: 0;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
+}
+
+.toggle:hover {
+  border-color: #aeb7c4;
+  background: #f8faff;
+}
+
+.toggle__chevron {
+  width: 8px;
+  height: 8px;
+  border-right: 1.8px solid #4c5664;
+  border-bottom: 1.8px solid #4c5664;
+  transform: translateY(-1px) rotate(45deg);
+  transition: transform 0.18s ease;
+}
+
+.toggle.is-expanded .toggle__chevron {
+  transform: translateY(1px) rotate(135deg);
 }
 
 .level-1 .metric-cell {

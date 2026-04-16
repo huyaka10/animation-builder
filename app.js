@@ -22,7 +22,7 @@ const metrics = [
         id: 'platform',
         name: 'Платформа приложения',
         level: 1,
-        values: ['', '', '', ''],
+        values: ['547 489,45', '537 381,14|-0,95%', '589 381,44|+0,73%', '540 123,11|-0,52%'],
         children: [
           {
             id: 'ios',
@@ -48,7 +48,7 @@ const metrics = [
         id: 'region',
         name: 'Регион',
         level: 1,
-        values: ['', '', '', ''],
+        values: ['339 992,03', '341 480,67|+0,10%', '337 912,30|-0,06%', '343 347,08|+0,18%'],
         children: [
           { id: 'ru', name: 'Россия', level: 2, values: ['129 330,98', '132 124,44|+0,31%', '127 901,90|-0,25%', '130 883,21|+0,13%'] },
           { id: 'eu', name: 'Европа', level: 2, values: ['121 777,17', '118 223,22|-0,44%', '121 000,95|-0,06%', '122 343,43|+0,08%'] },
@@ -59,7 +59,7 @@ const metrics = [
         id: 'subscription',
         name: 'Подписка',
         level: 1,
-        values: ['', '', '', ''],
+        values: ['406 216,00', '401 017,45|-0,12%', '412 584,12|+0,16%', '406 902,55|+0,02%'],
         children: [
           { id: 'trial', name: 'Триал', level: 2, values: ['44 220,00', '42 902,00|-0,40%', '45 001,12|+0,22%', '44 980,12|+0,19%'] },
           { id: 'monthly', name: 'Месячная', level: 2, values: ['140 004,00', '138 000,00|-0,28%', '141 701,55|+0,20%', '139 920,22|-0,03%'] },
@@ -141,8 +141,10 @@ function createMetricCell(row) {
 
   if (row.children?.length) {
     const toggle = document.createElement('button');
-    toggle.className = 'toggle';
-    toggle.textContent = expanded.has(row.id) ? '▾' : '▸';
+    const isExpanded = expanded.has(row.id);
+    toggle.className = `toggle ${isExpanded ? 'is-expanded' : ''}`.trim();
+    toggle.innerHTML = '<span class="toggle__chevron" aria-hidden="true"></span>';
+    toggle.setAttribute('aria-label', isExpanded ? `Свернуть ${row.name}` : `Раскрыть ${row.name}`);
     toggle.addEventListener('click', () => {
       if (expanded.has(row.id)) expanded.delete(row.id);
       else expanded.add(row.id);
