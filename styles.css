@@ -158,12 +158,16 @@ thead th:first-child {
 tbody td {
   font-size: 16px;
   padding: 15px 18px;
-  border-bottom: 1px solid #f1f3f7;
   vertical-align: middle;
 }
 
+
 tr.group {
   background: #f6f8fd;
+}
+
+#metricsTableBody tr:hover {
+  background: #eef2f8;
 }
 
 .metric-cell {
@@ -175,31 +179,17 @@ tr.group {
 .toggle {
   width: 24px;
   height: 24px;
-  border-radius: 7px;
-  border: 1px solid #ccd3de;
+  border: 0;
   display: inline-grid;
   place-items: center;
-  background: #fff;
+  background: transparent;
   padding: 0;
-  transition: border-color 0.18s ease, background-color 0.18s ease;
-}
-
-.toggle:hover {
-  border-color: #aeb7c4;
-  background: #f8faff;
 }
 
 .toggle__chevron {
-  width: 8px;
-  height: 8px;
-  border-right: 1.8px solid #4c5664;
-  border-bottom: 1.8px solid #4c5664;
-  transform: translateY(-1px) rotate(45deg);
-  transition: transform 0.18s ease;
-}
-
-.toggle.is-expanded .toggle__chevron {
-  transform: translateY(1px) rotate(135deg);
+  color: #394150;
+  font-size: 18px;
+  line-height: 1;
 }
 
 .level-1 .metric-cell {

@@ -145,7 +145,7 @@ function createMetricCell(row) {
     const toggle = document.createElement('button');
     const isExpanded = expanded.has(row.id);
     toggle.className = `toggle ${isExpanded ? 'is-expanded' : ''}`.trim();
-    toggle.innerHTML = '<span class="toggle__chevron" aria-hidden="true"></span>';
+    toggle.innerHTML = `<span class="toggle__chevron" aria-hidden="true">${isExpanded ? '⌃' : '⌄'}</span>`;
     toggle.setAttribute('aria-label', isExpanded ? `Свернуть ${row.name}` : `Раскрыть ${row.name}`);
     toggle.addEventListener('click', () => {
       if (expanded.has(row.id)) expanded.delete(row.id);
