@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Таблица метрик и срезов</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar" aria-label="Левая панель">
+        <div class="sidebar__logo"></div>
+        <div class="sidebar__spacer"></div>
+        <button class="sidebar__icon" aria-label="Помощь">?</button>
+        <button class="sidebar__icon" aria-label="Настройки">⚙</button>
+        <button class="sidebar__icon" aria-label="Обратная связь">✉</button>
+        <div class="sidebar__avatar"></div>
+      </aside>
+
+      <main class="content">
+        <header class="content__header">
+          <div>
+            <h1>Какое-то название расчёта <span class="status">Выполнен</span></h1>
+            <p>Период расчёта метрик 26.06.2023 11:20 – 08.07.2023 12:20</p>
+          </div>
+          <div class="controls">
+            <input id="searchInput" type="search" placeholder="Поиск по названию" autocomplete="off" />
+            <div class="toolbar">
+              <button class="tab active">Таблица</button>
+              <button class="tab">Разница</button>
+              <button class="filter">⏃ Фильтр</button>
+            </div>
+          </div>
+        </header>
+
+        <section class="table-card">
+          <table>
+            <thead>
+              <tr>
+                <th>Метрики и срезы</th>
+                <th>Контрольная группа</th>
+                <th>Тестовая группа 1</th>
+                <th>Тестовая группа 2</th>
+                <th>Тестовая группа 3</th>
+              </tr>
+            </thead>
+            <tbody id="metricsTableBody"></tbody>
+          </table>
+        </section>
+
+        <footer class="content__footer">
+          <button>Вернуться к списку</button>
+          <button disabled>Редактировать</button>
+        </footer>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
