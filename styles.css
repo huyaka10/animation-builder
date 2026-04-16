@@ -159,9 +159,16 @@ button {
 
 table {
   width: 100%;
-  min-width: 1680px;
   border-collapse: collapse;
   table-layout: fixed;
+}
+
+.table-card table {
+  min-width: 1280px;
+}
+
+.table-card.is-slices table {
+  min-width: 2200px;
 }
 
 thead th {
@@ -175,7 +182,7 @@ thead th {
 }
 
 thead th:first-child {
-  width: 280px;
+  width: 420px;
 }
 
 .table-card.dragging {

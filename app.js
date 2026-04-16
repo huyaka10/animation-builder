@@ -132,13 +132,9 @@ const headRow = document.getElementById('tableHeadRow');
 const searchInput = document.getElementById('searchInput');
 const viewHierarchyBtn = document.getElementById('viewHierarchy');
 const viewSlicesBtn = document.getElementById('viewSlices');
-const modeValuesBtn = document.getElementById('modeValues');
-const modeDeltaBtn = document.getElementById('modeDelta');
-const measureTabs = document.getElementById('measureTabs');
 const tableCard = document.getElementById('tableCard');
 
 let viewMode = 'hierarchy';
-let measureMode = 'delta';
 
 function flatten(nodes, parentId = null) {
   return nodes.flatMap((node) => {
@@ -302,9 +298,9 @@ function renderSlicesMatrix(query = '') {
     sliceMetrics.forEach((metricName) => {
       const cell = row.values?.[metricName] || fallbackCell(row.id, metricName);
       const td = document.createElement('td');
-      const text = measureMode === 'values' ? cell.value : cell.delta;
+      const text = cell.delta;
       td.textContent = text;
-      if (measureMode === 'delta') td.classList.add(deltaClass(text));
+      td.classList.add(deltaClass(text));
       tr.appendChild(td);
     });
 
@@ -315,11 +311,11 @@ function renderSlicesMatrix(query = '') {
 function render() {
   const query = searchInput.value.trim();
   if (viewMode === 'hierarchy') {
+    tableCard.classList.remove('is-slices');
     renderHierarchy(query);
-    measureTabs.classList.add('hidden');
   } else {
+    tableCard.classList.add('is-slices');
     renderSlicesMatrix(query);
-    measureTabs.classList.remove('hidden');
   }
 }
 
@@ -331,21 +327,7 @@ viewHierarchyBtn.addEventListener('click', () => {
 
 viewSlicesBtn.addEventListener('click', () => {
   viewMode = 'slices';
-  measureMode = 'delta';
   setTabState(viewSlicesBtn, viewHierarchyBtn);
-  setTabState(modeDeltaBtn, modeValuesBtn);
-  render();
-});
-
-modeValuesBtn.addEventListener('click', () => {
-  measureMode = 'values';
-  setTabState(modeValuesBtn, modeDeltaBtn);
-  render();
-});
-
-modeDeltaBtn.addEventListener('click', () => {
-  measureMode = 'delta';
-  setTabState(modeDeltaBtn, modeValuesBtn);
   render();
 });
 
