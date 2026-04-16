@@ -103,8 +103,9 @@ input[type="search"] {
   width: min(420px, 100%);
   border: 1px solid #d7dce4;
   border-radius: 10px;
-  padding: 11px 13px;
-  font-size: 14px;
+  padding: 14px 14px;
+  min-height: 48px;
+  font-size: 15px;
   color: #2f3640;
   background: #fff;
 }
@@ -223,6 +224,13 @@ tr.group {
 
 .match {
   outline: 2px solid var(--accent-soft);
+}
+
+
+.text-match {
+  background: #f2eeb7;
+  border-radius: 4px;
+  padding: 0 2px;
 }
 
 .content__footer {

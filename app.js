@@ -136,7 +136,18 @@ function deltaClass(delta) {
   return '';
 }
 
-function createMetricCell(row) {
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function highlightMatch(text, query) {
+  if (!query) return text;
+  const pattern = new RegExp(`(${escapeRegExp(query)})`, 'ig');
+  return text.replace(pattern, '<span class="text-match">$1</span>');
+}
+
+function createMetricCell(row, query = '') {
   const cell = document.createElement('td');
   const wrapper = document.createElement('div');
   wrapper.className = 'metric-cell';
@@ -161,7 +172,7 @@ function createMetricCell(row) {
   }
 
   const title = document.createElement('span');
-  title.textContent = row.name;
+  title.innerHTML = highlightMatch(row.name, query);
   wrapper.appendChild(title);
 
   cell.appendChild(wrapper);
@@ -207,7 +218,7 @@ function renderRows(query = '') {
     if (!isVisible(row, query)) tr.classList.add('hidden-row');
     if (query && matchesSearch(row, query)) tr.classList.add('match');
 
-    tr.appendChild(createMetricCell(row));
+    tr.appendChild(createMetricCell(row, query));
 
     row.values.forEach((raw) => {
       const td = document.createElement('td');
