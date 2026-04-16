@@ -153,11 +153,13 @@ button {
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 14px;
-  overflow: hidden;
+  overflow: auto;
+  cursor: grab;
 }
 
 table {
   width: 100%;
+  min-width: 1680px;
   border-collapse: collapse;
   table-layout: fixed;
 }
@@ -173,7 +175,12 @@ thead th {
 }
 
 thead th:first-child {
-  width: 37%;
+  width: 280px;
+}
+
+.table-card.dragging {
+  cursor: grabbing;
+  user-select: none;
 }
 
 tbody td {
@@ -237,6 +244,16 @@ tr.group {
 .delta.positive {
   color: var(--success);
 }
+
+
+#metricsTableBody td.negative {
+  color: var(--danger);
+}
+
+#metricsTableBody td.positive {
+  color: var(--success);
+}
+
 
 .hidden-row {
   display: none;

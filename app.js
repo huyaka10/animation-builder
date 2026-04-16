@@ -54,7 +54,7 @@ const metrics = [
   },
 ];
 
-const sliceMetrics = ['Количество покупок', 'Revenue', 'Средний чек', 'Конверсия'];
+const sliceMetrics = ['Количество покупок', 'Revenue', 'Средний чек', 'Конверсия', 'ARPU', 'ARPPU', 'LTV D30', 'Retention D7', 'Retention D30', 'ROI', 'CAC'];
 
 const slices = [
   {
@@ -135,9 +135,10 @@ const viewSlicesBtn = document.getElementById('viewSlices');
 const modeValuesBtn = document.getElementById('modeValues');
 const modeDeltaBtn = document.getElementById('modeDelta');
 const measureTabs = document.getElementById('measureTabs');
+const tableCard = document.getElementById('tableCard');
 
 let viewMode = 'hierarchy';
-let measureMode = 'values';
+let measureMode = 'delta';
 
 function flatten(nodes, parentId = null) {
   return nodes.flatMap((node) => {
@@ -270,6 +271,16 @@ function renderHierarchy(query = '') {
   });
 }
 
+
+function fallbackCell(rowId, metricName) {
+  const seed = `${rowId}-${metricName}`.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  const sign = seed % 2 === 0 ? '+' : '-';
+  const deltaNum = ((seed % 230) / 100).toFixed(2).replace('.', ',');
+  const delta = `${sign}${deltaNum}%`;
+  const value = `${(200 + (seed % 900)).toLocaleString('ru-RU')},${String(seed % 99).padStart(2, '0')}`;
+  return { value, delta };
+}
+
 function renderSlicesMatrix(query = '') {
   renderHeaders(['Срезы', ...sliceMetrics]);
   tbody.innerHTML = '';
@@ -289,7 +300,7 @@ function renderSlicesMatrix(query = '') {
     );
 
     sliceMetrics.forEach((metricName) => {
-      const cell = row.values?.[metricName] || { value: '—', delta: '—' };
+      const cell = row.values?.[metricName] || fallbackCell(row.id, metricName);
       const td = document.createElement('td');
       const text = measureMode === 'values' ? cell.value : cell.delta;
       td.textContent = text;
@@ -320,7 +331,9 @@ viewHierarchyBtn.addEventListener('click', () => {
 
 viewSlicesBtn.addEventListener('click', () => {
   viewMode = 'slices';
+  measureMode = 'delta';
   setTabState(viewSlicesBtn, viewHierarchyBtn);
+  setTabState(modeDeltaBtn, modeValuesBtn);
   render();
 });
 
@@ -337,5 +350,28 @@ modeDeltaBtn.addEventListener('click', () => {
 });
 
 searchInput.addEventListener('input', render);
+
+
+let isDragging = false;
+let dragStartX = 0;
+let initialScrollLeft = 0;
+
+tableCard.addEventListener('mousedown', (event) => {
+  isDragging = true;
+  tableCard.classList.add('dragging');
+  dragStartX = event.pageX;
+  initialScrollLeft = tableCard.scrollLeft;
+});
+
+window.addEventListener('mouseup', () => {
+  isDragging = false;
+  tableCard.classList.remove('dragging');
+});
+
+window.addEventListener('mousemove', (event) => {
+  if (!isDragging) return;
+  const distance = event.pageX - dragStartX;
+  tableCard.scrollLeft = initialScrollLeft - distance;
+});
 
 render();
