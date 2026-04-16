@@ -339,13 +339,20 @@ let dragStartX = 0;
 let initialScrollLeft = 0;
 
 tableCard.addEventListener('mousedown', (event) => {
+  if (event.button !== 0 || viewMode !== 'slices') return;
   isDragging = true;
   tableCard.classList.add('dragging');
   dragStartX = event.pageX;
   initialScrollLeft = tableCard.scrollLeft;
+  event.preventDefault();
 });
 
 window.addEventListener('mouseup', () => {
+  isDragging = false;
+  tableCard.classList.remove('dragging');
+});
+
+tableCard.addEventListener('mouseleave', () => {
   isDragging = false;
   tableCard.classList.remove('dragging');
 });
@@ -354,6 +361,7 @@ window.addEventListener('mousemove', (event) => {
   if (!isDragging) return;
   const distance = event.pageX - dragStartX;
   tableCard.scrollLeft = initialScrollLeft - distance;
+  event.preventDefault();
 });
 
 render();
