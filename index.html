@@ -26,8 +26,14 @@
           <div class="controls">
             <input id="searchInput" type="search" placeholder="Поиск по названию" autocomplete="off" />
             <div class="toolbar">
-              <button class="tab active">Таблица</button>
-              <button class="tab">Разница</button>
+              <div class="tab-group" role="tablist" aria-label="Режим отображения">
+                <button id="viewHierarchy" class="tab active" role="tab" aria-selected="true">Таблица</button>
+                <button id="viewSlices" class="tab" role="tab" aria-selected="false">Срезы × метрики</button>
+              </div>
+              <div id="measureTabs" class="tab-group hidden" role="tablist" aria-label="Тип данных">
+                <button id="modeValues" class="tab active" role="tab" aria-selected="true">Значения</button>
+                <button id="modeDelta" class="tab" role="tab" aria-selected="false">Дельта</button>
+              </div>
               <button class="filter">⎚ Фильтр</button>
             </div>
           </div>
@@ -36,13 +42,7 @@
         <section class="table-card">
           <table>
             <thead>
-              <tr>
-                <th>Метрики и срезы</th>
-                <th>Контрольная группа</th>
-                <th>Тестовая группа 1</th>
-                <th>Тестовая группа 2</th>
-                <th>Тестовая группа 3</th>
-              </tr>
+              <tr id="tableHeadRow"></tr>
             </thead>
             <tbody id="metricsTableBody"></tbody>
           </table>
