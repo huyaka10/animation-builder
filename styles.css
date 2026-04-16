@@ -27,7 +27,7 @@ body {
 
 .layout {
   display: grid;
-  grid-template-columns: 72px 1fr;
+  grid-template-columns: 72px minmax(0, 1fr);
   min-height: 100vh;
 }
 
@@ -69,6 +69,7 @@ body {
 
 .content {
   padding: 32px 36px 22px;
+  min-width: 0;
 }
 
 .content__header h1 {
@@ -119,6 +120,7 @@ input[type="search"] {
   display: flex;
   gap: 10px;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .tab-group {
@@ -163,6 +165,7 @@ button {
   max-width: 100%;
   width: 100%;
   cursor: grab;
+  -webkit-overflow-scrolling: touch;
 }
 
 table {
@@ -171,12 +174,27 @@ table {
   table-layout: fixed;
 }
 
+.table-card::-webkit-scrollbar {
+  height: 10px;
+}
+
+.table-card::-webkit-scrollbar-thumb {
+  background: #a4a9b1;
+  border-radius: 999px;
+}
+
+.table-card::-webkit-scrollbar-track {
+  background: #e6e8ec;
+  border-radius: 999px;
+}
+
 .table-card table {
   min-width: 1280px;
 }
 
 .table-card.is-slices table {
-  min-width: 2200px;
+  width: max-content;
+  min-width: 1800px;
 }
 
 thead th {
