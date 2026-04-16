@@ -189,12 +189,12 @@ table {
 }
 
 .table-card table {
-  min-width: 1280px;
+  min-width: 1500px;
 }
 
 .table-card.is-slices table {
   width: max-content;
-  min-width: 1800px;
+  min-width: 2400px;
 }
 
 thead th {
@@ -209,6 +209,12 @@ thead th {
 
 thead th:first-child {
   width: 420px;
+}
+
+
+thead th:not(:first-child),
+tbody td:not(:first-child) {
+  text-align: right;
 }
 
 
