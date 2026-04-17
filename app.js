@@ -146,6 +146,8 @@ let viewMode = 'hierarchy';
 let filterMode = false;
 const hiddenRowIds = new Set();
 const hiddenColumnKeys = new Set();
+const hiddenSliceRowIds = new Set();
+const hiddenSliceMetricCols = new Set();
 
 function flatten(nodes, parentId = null) {
   return nodes.flatMap((node) => {
@@ -203,6 +205,10 @@ function getEyeIcon(isHidden) {
 
 function isRowHiddenByFilter(rowId) {
   return hiddenRowIds.has(rowId);
+}
+
+function isSliceRowHiddenByFilter(rowId) {
+  return hiddenSliceRowIds.has(rowId);
 }
 
 function hasVisibleChild(rows, rowId, query) {
@@ -361,34 +367,95 @@ function fallbackCell(rowId, metricName) {
 }
 
 function renderSlicesMatrix(query = '') {
-  renderHeaders(['Срезы', ...sliceMetrics]);
+  const metricQueryMatches = query ? sliceMetrics.filter((metric) => metric.toLowerCase().includes(query.toLowerCase())) : [];
+  const useMetricQuery = query && metricQueryMatches.length > 0;
+
+  const baseVisibleMetrics = sliceMetrics.filter((metricName) => filterMode || !hiddenSliceMetricCols.has(metricName));
+  const visibleMetrics = useMetricQuery ? baseVisibleMetrics.filter((metric) => metric.toLowerCase().includes(query.toLowerCase())) : baseVisibleMetrics;
+
+  renderHeaders(['Срезы', ...visibleMetrics]);
+
+  if (filterMode) {
+    const headerCells = headRow.querySelectorAll('th');
+    headerCells.forEach((th, index) => {
+      if (index === 0) {
+        th.innerHTML = `<span class="header-with-eye"><span class="eye-icon">${getEyeIcon(false)}</span> Срезы</span>`;
+        return;
+      }
+      const metricName = visibleMetrics[index - 1];
+      const isHidden = hiddenSliceMetricCols.has(metricName);
+      th.classList.toggle('filter-hidden-col', isHidden);
+      th.innerHTML = `<span class="header-with-eye"><span class="eye-icon ${isHidden ? 'is-off' : ''}" data-slice-column="${metricName}">${getEyeIcon(isHidden)}</span> ${metricName}</span>`;
+    });
+  }
+
   tbody.innerHTML = '';
 
   sliceRows.forEach((row) => {
     const tr = document.createElement('tr');
     tr.classList.add(`level-${row.level}`);
-    if (!isVisible(sliceRows, expandedSlices, row, query)) tr.classList.add('hidden-row');
+
+    const rowHiddenByFilter = isSliceRowHiddenByFilter(row.id);
+    const effectiveQuery = useMetricQuery ? '' : query;
+    if (!isVisible(sliceRows, expandedSlices, row, effectiveQuery)) tr.classList.add('hidden-row');
+    if (!filterMode && rowHiddenByFilter) tr.classList.add('hidden-row');
+    if (filterMode && rowHiddenByFilter) tr.classList.add('filter-hidden-row');
     if (query && row.name.toLowerCase().includes(query.toLowerCase())) tr.classList.add('match');
 
-    tr.appendChild(
-      createNameCell(row, query, expandedSlices, () => {
-        if (expandedSlices.has(row.id)) expandedSlices.delete(row.id);
-        else expandedSlices.add(row.id);
-        render();
-      }),
-    );
+    const nameCell = createNameCell(row, query, expandedSlices, () => {
+      if (expandedSlices.has(row.id)) expandedSlices.delete(row.id);
+      else expandedSlices.add(row.id);
+      render();
+    });
 
-    sliceMetrics.forEach((metricName) => {
+    if (filterMode) {
+      const eye = document.createElement('span');
+      eye.className = `eye-icon row-eye ${rowHiddenByFilter ? 'is-off' : ''}`;
+      eye.textContent = getEyeIcon(rowHiddenByFilter);
+      eye.dataset.sliceRow = row.id;
+      nameCell.querySelector('.metric-cell').prepend(eye);
+    }
+
+    tr.appendChild(nameCell);
+
+    visibleMetrics.forEach((metricName) => {
       const cell = row.values?.[metricName] || fallbackCell(row.id, metricName);
       const td = document.createElement('td');
       const text = cell.delta;
-      td.textContent = text;
-      td.classList.add(deltaClass(text));
+
+      if (filterMode && (rowHiddenByFilter || hiddenSliceMetricCols.has(metricName))) {
+        td.textContent = '';
+      } else {
+        td.textContent = text;
+        td.classList.add(deltaClass(text));
+      }
       tr.appendChild(td);
     });
 
     tbody.appendChild(tr);
   });
+
+  if (filterMode) {
+    tbody.querySelectorAll('[data-slice-row]').forEach((eye) => {
+      eye.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const rowId = eye.dataset.sliceRow;
+        if (hiddenSliceRowIds.has(rowId)) hiddenSliceRowIds.delete(rowId);
+        else hiddenSliceRowIds.add(rowId);
+        render();
+      });
+    });
+
+    headRow.querySelectorAll('[data-slice-column]').forEach((eye) => {
+      eye.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const metricName = eye.dataset.sliceColumn;
+        if (hiddenSliceMetricCols.has(metricName)) hiddenSliceMetricCols.delete(metricName);
+        else hiddenSliceMetricCols.add(metricName);
+        render();
+      });
+    });
+  }
 }
 
 function render() {
@@ -411,15 +478,13 @@ viewHierarchyBtn.addEventListener('click', () => {
 
 viewSlicesBtn.addEventListener('click', () => {
   viewMode = 'slices';
-  filterMode = false;
-  filterModeToggle.classList.remove('is-active');
   setTabState(viewSlicesBtn, viewHierarchyBtn);
+  filterModeToggle.classList.toggle('is-active', filterMode);
   render();
 });
 
 
 filterModeToggle.addEventListener('click', () => {
-  if (viewMode !== 'hierarchy') return;
   filterMode = !filterMode;
   filterModeToggle.classList.toggle('is-active', filterMode);
   render();
