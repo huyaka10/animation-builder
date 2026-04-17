@@ -211,6 +211,32 @@ function isSliceRowHiddenByFilter(rowId) {
   return hiddenSliceRowIds.has(rowId);
 }
 
+
+function collectDescendantIds(rows, parentId) {
+  const children = rows.filter((row) => row.parentId === parentId);
+  return children.flatMap((child) => [child.id, ...collectDescendantIds(rows, child.id)]);
+}
+
+function toggleRowCascade(setRef, rows, rowId) {
+  const targetIds = [rowId, ...collectDescendantIds(rows, rowId)];
+  const shouldHide = !setRef.has(rowId);
+  targetIds.forEach((id) => {
+    if (shouldHide) setRef.add(id);
+    else setRef.delete(id);
+  });
+}
+
+function setAllRowsHidden(setRef, rows, hide) {
+  rows.forEach((row) => {
+    if (hide) setRef.add(row.id);
+    else setRef.delete(row.id);
+  });
+}
+
+function areAllRowsHidden(setRef, rows) {
+  return rows.every((row) => setRef.has(row.id));
+}
+
 function hasVisibleChild(rows, rowId, query) {
   return rows.some((row) => {
     if (row.parentId !== rowId) return false;
@@ -266,7 +292,8 @@ function renderHierarchy(query = '') {
     const headerCells = headRow.querySelectorAll('th');
     headerCells.forEach((th, index) => {
       if (index === 0) {
-        th.innerHTML = `<span class="header-with-eye"><span class="eye-icon">${getEyeIcon(false)}</span> Метрики и срезы</span>`;
+        const isAllHidden = areAllRowsHidden(hiddenRowIds, hierarchyRows);
+        th.innerHTML = `<span class="header-with-eye"><span class="eye-icon ${isAllHidden ? 'is-off' : ''}" data-all-hierarchy="1">${getEyeIcon(isAllHidden)}</span> Метрики и срезы</span>`;
         return;
       }
       const column = visibleColumns[index - 1];
@@ -337,8 +364,16 @@ function renderHierarchy(query = '') {
       eye.addEventListener('click', (event) => {
         event.stopPropagation();
         const rowId = eye.dataset.row;
-        if (hiddenRowIds.has(rowId)) hiddenRowIds.delete(rowId);
-        else hiddenRowIds.add(rowId);
+        toggleRowCascade(hiddenRowIds, hierarchyRows, rowId);
+        render();
+      });
+    });
+
+    headRow.querySelectorAll('[data-all-hierarchy]').forEach((eye) => {
+      eye.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const hideAll = !areAllRowsHidden(hiddenRowIds, hierarchyRows);
+        setAllRowsHidden(hiddenRowIds, hierarchyRows, hideAll);
         render();
       });
     });
@@ -379,7 +414,8 @@ function renderSlicesMatrix(query = '') {
     const headerCells = headRow.querySelectorAll('th');
     headerCells.forEach((th, index) => {
       if (index === 0) {
-        th.innerHTML = `<span class="header-with-eye"><span class="eye-icon">${getEyeIcon(false)}</span> Срезы</span>`;
+        const isAllHidden = areAllRowsHidden(hiddenSliceRowIds, sliceRows);
+        th.innerHTML = `<span class="header-with-eye"><span class="eye-icon ${isAllHidden ? 'is-off' : ''}" data-all-slices="1">${getEyeIcon(isAllHidden)}</span> Срезы</span>`;
         return;
       }
       const metricName = visibleMetrics[index - 1];
@@ -440,8 +476,16 @@ function renderSlicesMatrix(query = '') {
       eye.addEventListener('click', (event) => {
         event.stopPropagation();
         const rowId = eye.dataset.sliceRow;
-        if (hiddenSliceRowIds.has(rowId)) hiddenSliceRowIds.delete(rowId);
-        else hiddenSliceRowIds.add(rowId);
+        toggleRowCascade(hiddenSliceRowIds, sliceRows, rowId);
+        render();
+      });
+    });
+
+    headRow.querySelectorAll('[data-all-slices]').forEach((eye) => {
+      eye.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const hideAll = !areAllRowsHidden(hiddenSliceRowIds, sliceRows);
+        setAllRowsHidden(hiddenSliceRowIds, sliceRows, hideAll);
         render();
       });
     });
