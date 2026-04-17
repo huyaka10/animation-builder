@@ -49,7 +49,7 @@ const metrics = [
         ],
       },
       { id: 'average-check', name: 'Средний чек', level: 1, values: ['3 048,00', '5 489,45|+1,94%', '5 489,45|+1,94%', '1 489,45|+1,94%'] },
-      { id: 'conversion', name: 'Конверсия', level: 1, group: true, values: ['2,41%', '2,37%|-0,04%', '2,46%|+0,05%', '2,39%|-0,02%'] },
+      { id: 'conversion', name: 'Конверсия', level: 1, values: ['2,41%', '2,37%|-0,04%', '2,46%|+0,05%', '2,39%|-0,02%'] },
     ],
   },
 ];
@@ -134,9 +134,6 @@ const viewHierarchyBtn = document.getElementById('viewHierarchy');
 const viewSlicesBtn = document.getElementById('viewSlices');
 const tableCard = document.getElementById('tableCard');
 const filterModeToggle = document.getElementById('filterModeToggle');
-const filterModeActions = document.getElementById('filterModeActions');
-const showAllRowsBtn = document.getElementById('showAllRowsBtn');
-const hideNonKeyBtn = document.getElementById('hideNonKeyBtn');
 
 const hierarchyColumns = [
   { key: 'control', label: 'Контрольная группа', canHide: false },
@@ -201,7 +198,7 @@ function renderHeaders(labels) {
 
 
 function getEyeIcon(isHidden) {
-  return isHidden ? '⊘' : '◉';
+  return isHidden ? '👁̶' : '👁';
 }
 
 function isRowHiddenByFilter(rowId) {
@@ -408,7 +405,6 @@ function render() {
 viewHierarchyBtn.addEventListener('click', () => {
   viewMode = 'hierarchy';
   setTabState(viewHierarchyBtn, viewSlicesBtn);
-  filterModeActions.classList.toggle('hidden', !filterMode);
   filterModeToggle.classList.toggle('is-active', filterMode);
   render();
 });
@@ -417,7 +413,6 @@ viewSlicesBtn.addEventListener('click', () => {
   viewMode = 'slices';
   filterMode = false;
   filterModeToggle.classList.remove('is-active');
-  filterModeActions.classList.add('hidden');
   setTabState(viewSlicesBtn, viewHierarchyBtn);
   render();
 });
@@ -427,23 +422,9 @@ filterModeToggle.addEventListener('click', () => {
   if (viewMode !== 'hierarchy') return;
   filterMode = !filterMode;
   filterModeToggle.classList.toggle('is-active', filterMode);
-  filterModeActions.classList.toggle('hidden', !filterMode);
   render();
 });
 
-showAllRowsBtn.addEventListener('click', () => {
-  hiddenRowIds.clear();
-  hiddenColumnKeys.clear();
-  render();
-});
-
-hideNonKeyBtn.addEventListener('click', () => {
-  hiddenRowIds.clear();
-  hiddenColumnKeys.clear();
-  ['test1', 'test2'].forEach((key) => hiddenColumnKeys.add(key));
-  ['platform', 'ios', 'android', 'web', 'region', 'subscription', 'conversion'].forEach((rowId) => hiddenRowIds.add(rowId));
-  render();
-});
 
 searchInput.addEventListener('input', render);
 

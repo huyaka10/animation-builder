@@ -163,18 +163,13 @@ button {
   border-color: #2e2e2e;
 }
 
-.filter-actions {
-  margin-top: 8px;
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
+.filter.is-active::after {
+  content: '✕';
+  margin-left: 16px;
+  font-size: 14px;
+  opacity: 0.9;
 }
 
-.filter-actions button {
-  font-size: 13px;
-  padding: 6px 10px;
-  border-radius: 8px;
-}
 
 .header-with-eye {
   display: inline-flex;
@@ -184,7 +179,8 @@ button {
 
 .eye-icon {
   color: #7b8190;
-  font-size: 14px;
+  font-size: 18px;
+  line-height: 1;
   cursor: pointer;
   user-select: none;
 }
