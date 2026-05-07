@@ -1,6 +1,6 @@
-# CRT Glitch Animation
+# AI Project Molecular Process
 
-A small canvas animation inspired by the provided pixelated blue/yellow CRT reference image.
+A self-contained canvas animation inspired by the provided pixelated blue/yellow CRT reference image. The scene visualizes an abstract AI project-building process: four agents (reviewer, frontend, backend, planner) are represented as molecular clusters made from small horizontal rods. The rods flicker in intensity inside each cell, while agent structures pulse and exchange signals.
 
 ## Run locally
 
